@@ -1,0 +1,21 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{0FF596BA-A1EC-4EA8-A93A-426428143359}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tortis.Iam.Server", "src\Tortis.Iam.Server\Tortis.Iam.Server.csproj", "{A9668298-70DB-4CC4-A4D5-10CF4ECA8830}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A9668298-70DB-4CC4-A4D5-10CF4ECA8830} = {0FF596BA-A1EC-4EA8-A93A-426428143359}
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A9668298-70DB-4CC4-A4D5-10CF4ECA8830}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9668298-70DB-4CC4-A4D5-10CF4ECA8830}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9668298-70DB-4CC4-A4D5-10CF4ECA8830}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9668298-70DB-4CC4-A4D5-10CF4ECA8830}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
