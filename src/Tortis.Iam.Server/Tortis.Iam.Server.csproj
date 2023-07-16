@@ -6,4 +6,12 @@
         <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
 
+    <ItemGroup>
+        <InternalsVisibleTo Include="Tortis.Iam.Oidc.Tests" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Tortis.Iam.Oidc\Tortis.Iam.Oidc.csproj" />
+    </ItemGroup>
+    
 </Project>
