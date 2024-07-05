@@ -1,9 +1,21 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
+        <OutputType>Library</OutputType>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <Folder Include="Authorization\ImplicitGrantFlow\" />
+      <Folder Include="Authorization\OnBehalfOfGrantFlow\" />
+      <Folder Include="Authorization\RefreshTokenGrantFlow\" />
+      <Folder Include="Authorization\ResourceOwnerPasswordGrantFlow\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="6.32.0" />
+    </ItemGroup>
+    
 </Project>

@@ -11,7 +11,13 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Tortis.Iam.Oidc.EntityFramework\Tortis.Iam.Oidc.EntityFramework.csproj" />
       <ProjectReference Include="..\Tortis.Iam.Oidc\Tortis.Iam.Oidc.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.20" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="6.0.20" />
     </ItemGroup>
     
 </Project>
