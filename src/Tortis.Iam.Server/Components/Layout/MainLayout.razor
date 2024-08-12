@@ -1,23 +1,51 @@
 ﻿@inherits LayoutComponentBase
+<RadzenLayout>
+    <RadzenHeader>
+        <RadzenRow>
+            <RadzenColumn Size="5">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
+                    <RadzenSidebarToggle Click="@ToggleSidebar"/>
+                    <RadzenLabel Text="Tortis IAM"/>
+                </RadzenStack>
+            </RadzenColumn>
+            <RadzenColumn Size="7">
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Right">
+                    <RadzenProfileMenu ShowIcon="true">
+                        <Template>
+                            <RadzenIcon Icon="account_circle"/>
+                        </Template>
+                        <ChildContent>
+                            <RadzenProfileMenuItem Text="My Profile" Icon="account_circle" Path="/account/manage"></RadzenProfileMenuItem>
+                            <RadzenProfileMenuItem Text="Logout" Icon="exit_to_app" Path="/account/logout"></RadzenProfileMenuItem>
+                        </ChildContent>
+                    </RadzenProfileMenu>
+                </RadzenStack>
+            </RadzenColumn>
+        </RadzenRow>
+
+    </RadzenHeader>
+    <RadzenSidebar @bind-Expanded="@_sidebar1Expanded">
+        <NavMenu />
+    </RadzenSidebar>
+    <RadzenBody>
+        @Body
+    </RadzenBody>
+</RadzenLayout>
 <RadzenComponents @rendermode="InteractiveServer" />
-<div class="page">
-    <div class="sidebar">
-        <NavMenu/>
-    </div>
-
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
-
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
 
 <div id="blazor-error-ui">
     An unhandled error has occurred.
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
+
+@code {
+
+    bool _sidebar1Expanded = true;
+
+    void ToggleSidebar()
+    {
+        _sidebar1Expanded = !_sidebar1Expanded;
+    }
+
+}

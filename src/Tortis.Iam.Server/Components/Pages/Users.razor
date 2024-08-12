@@ -1,0 +1,69 @@
+@page "/Users"
+@using Microsoft.AspNetCore.Authorization
+@using Tortis.Iam.Server.Data
+
+@inject ApplicationDbContext _dbContext;
+
+@attribute [Authorize]
+<h3>Users</h3>
+
+<RadzenDataGrid Data="_users">
+    <Columns>
+        <RadzenDataGridColumn Property="@nameof(ApplicationUser.UserName)" Title="Username" />
+        <RadzenDataGridColumn Property="@nameof(ApplicationUser.Email)" Title="Email Address"/>    
+        <RadzenDataGridColumn Property="@nameof(ApplicationUser.EmailConfirmed)" Title="Email Confirmed">
+            <Template Context="user">
+                @{
+                if (user.EmailConfirmed)
+                {
+                <RadzenIcon Icon="Check"/>
+                }
+                else
+                {
+                <RadzenIcon Icon="Close" IconColor="Red"/>
+                }
+                }
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Property="@nameof(ApplicationUser.PhoneNumber)" Title="Phone Number"/>
+        <RadzenDataGridColumn Property="@nameof(ApplicationUser.TwoFactorEnabled)" Title="2FA">
+            <Template Context="user">
+            @{
+                if (user.TwoFactorEnabled)
+                {
+                    <RadzenIcon Icon="Check"/>
+                }
+                else
+                {
+                    <RadzenIcon Icon="Close" IconColor="Red"/>
+                }
+            }
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Property="@nameof(ApplicationUser.LockoutEnabled)" Title="Lockout Enabled">
+            <Template Context="user">
+                @{
+                if (user.LockoutEnabled)
+                {
+                <RadzenIcon Icon="Check"/>
+                }
+                else
+                {
+                <RadzenIcon Icon="Close" IconColor="Red"/>
+                }
+                }
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Property="@nameof(ApplicationUser.LockoutEnd)" Title="Locked Until"/>
+    </Columns>
+</RadzenDataGrid>
+@code {
+    IQueryable<ApplicationUser> _users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        _users = _dbContext.Users;
+    }
+
+}

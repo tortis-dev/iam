@@ -30,6 +30,7 @@ sealed class SetupDefaultAdmin : BackgroundService
         await store.SetUserNameAsync(admin, username, stoppingToken);
 
         admin.EmailConfirmed = true;
+        
         var result = await userManager.CreateAsync(admin, defaultPassword);
 
         if (!result.Succeeded)

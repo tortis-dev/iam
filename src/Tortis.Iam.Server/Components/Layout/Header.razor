@@ -1,0 +1,17 @@
+@rendermode InteractiveServer
+<RadzenHeader>
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
+        <RadzenSidebarToggle Click="@ToggleSidebar" />
+        <RadzenLabel Text="Tortis IAM" />
+    </RadzenStack>
+</RadzenHeader>
+@code {
+
+    bool _sidebar1Expanded = true;
+
+    void ToggleSidebar()
+    {
+        _sidebar1Expanded = !_sidebar1Expanded;
+    }
+
+}
