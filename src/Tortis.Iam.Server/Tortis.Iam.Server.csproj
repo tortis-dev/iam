@@ -6,9 +6,9 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <UserSecretsId>aspnet-Tortis.Iam.Server-FE1ACAB7-3021-42FA-A1E8-2E63E219B8E2</UserSecretsId>
     </PropertyGroup>
-
+    
     <ItemGroup>
-        <None Update="Data\app.db" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true"/>
+        <InternalsVisibleTo Include="OpenIdConnectTests" />
     </ItemGroup>
 
     <ItemGroup>
@@ -19,6 +19,11 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.7" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.7"/>
         <PackageReference Include="Radzen.Blazor" Version="5.0.6" />
+        <PackageReference Include="OpenIddict" Version="5.7.1" />
+        <PackageReference Include="OpenIddict.AspNetCore" Version="5.7.1" />
+        <PackageReference Include="OpenIddict.EntityFrameworkCore" Version="5.7.1" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.QuickGrid" Version="8.0.11" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.QuickGrid.EntityFrameworkAdapter" Version="8.0.11" />
     </ItemGroup>
 
     <ItemGroup>

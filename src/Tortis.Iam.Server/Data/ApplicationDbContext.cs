@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using OpenIddict.EntityFrameworkCore.Models;
 
 namespace Tortis.Iam.Server.Data;
 
@@ -19,18 +20,30 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         
         if (!base.Database.IsSqlite())
             builder.HasDefaultSchema("iam");
-        
-        var user = builder.Entity<ApplicationUser>().ToTable("iam_users");
-        user.HasIndex(p => p.NormalizedEmail).HasDatabaseName("ix_iam_users_email");
-        user.HasIndex(p => p.NormalizedUserName).HasDatabaseName("ix_iam_users_username");
-        
-        var role = builder.Entity<IdentityRole<Guid>>().ToTable("iam_roles");
-        role.HasIndex(p => p.NormalizedName).HasDatabaseName("ix_iam_role_name");
 
+        // Identity Tables
+        builder.Entity<ApplicationUser>(user =>
+        {
+            user.ToTable("iam_users");
+            user.Ignore(p => p.AccountLocked);
+            user.HasIndex(p => p.NormalizedEmail).HasDatabaseName("ix_iam_users_email");
+            user.HasIndex(p => p.NormalizedUserName).HasDatabaseName("ix_iam_users_username");
+        });
+        builder.Entity<IdentityRole<Guid>>(role =>
+        {
+            role.ToTable("iam_roles");
+            role.HasIndex(p => p.NormalizedName).HasDatabaseName("ix_iam_role_name");
+        });
         builder.Entity<IdentityRoleClaim<Guid>>().ToTable("iam_role_claim");
         builder.Entity<IdentityUserRole<Guid>>().ToTable("iam_user_roles");
         builder.Entity<IdentityUserClaim<Guid>>().ToTable("iam_user_claims");
         builder.Entity<IdentityUserLogin<Guid>>().ToTable("iam_user_login");
         builder.Entity<IdentityUserToken<Guid>>().ToTable("iam_user_token");
+        
+        //OpenIdDict Tables
+        builder.Entity<OpenIddictEntityFrameworkCoreApplication<Guid>>().ToTable("iam_oidc_applications");
+        builder.Entity<OpenIddictEntityFrameworkCoreScope<Guid>>().ToTable("iam_oidc_scopes");
+        builder.Entity<OpenIddictEntityFrameworkCoreAuthorization<Guid>>().ToTable("iam_oidc_authorizations");
+        builder.Entity<OpenIddictEntityFrameworkCoreToken<Guid>>().ToTable("iam_oidc_tokens");
     }
 }

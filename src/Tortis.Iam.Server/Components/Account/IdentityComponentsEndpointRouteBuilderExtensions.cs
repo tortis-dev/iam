@@ -50,7 +50,7 @@ internal static class IdentityComponentsEndpointRouteBuilderExtensions
             await signInManager.SignOutAsync();
             return TypedResults.LocalRedirect($"~/{returnUrl}");
         });
-
+        
         var manageGroup = accountGroup.MapGroup("/Manage").RequireAuthorization();
 
         manageGroup.MapPost("/LinkExternalLogin", async (

@@ -2,13 +2,21 @@
 
 @inject NavigationManager NavigationManager
 
-<div class="nav-scrollable" >
-    <nav class="flex-column">
-        <div class="nav-item px-3">
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">Tortis.Iam.Server</a>
+    </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler"/>
+
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+    <ul class="nav nav-pills flex-column mb-auto">
+        <li class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
             </NavLink>
-        </div>
+        </li>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="counter">
@@ -23,8 +31,8 @@
         </div>
 
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="users">
-                <span class="bi bi-lock-nav-menu" aria-hidden="true"></span> Users
+            <NavLink class="nav-link" href="auth">
+                <span class="bi bi-lock-nav-menu" aria-hidden="true"></span> Auth Required
             </NavLink>
         </div>
 
@@ -58,7 +66,7 @@
                 </div>
             </NotAuthorized>
         </AuthorizeView>
-    </nav>
+    </ul>
 </div>
 
 @code {

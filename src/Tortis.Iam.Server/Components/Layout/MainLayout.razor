@@ -1,51 +1,71 @@
 ﻿@inherits LayoutComponentBase
-<RadzenLayout>
-    <RadzenHeader>
-        <RadzenRow>
-            <RadzenColumn Size="5">
-                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
-                    <RadzenSidebarToggle Click="@ToggleSidebar"/>
-                    <RadzenLabel Text="Tortis IAM"/>
-                </RadzenStack>
-            </RadzenColumn>
-            <RadzenColumn Size="7">
-                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Right">
-                    <RadzenProfileMenu ShowIcon="true">
-                        <Template>
-                            <RadzenIcon Icon="account_circle"/>
-                        </Template>
-                        <ChildContent>
-                            <RadzenProfileMenuItem Text="My Profile" Icon="account_circle" Path="/account/manage"></RadzenProfileMenuItem>
-                            <RadzenProfileMenuItem Text="Logout" Icon="exit_to_app" Path="/account/logout"></RadzenProfileMenuItem>
-                        </ChildContent>
-                    </RadzenProfileMenu>
-                </RadzenStack>
-            </RadzenColumn>
-        </RadzenRow>
 
-    </RadzenHeader>
-    <RadzenSidebar @bind-Expanded="@_sidebar1Expanded">
-        <NavMenu />
-    </RadzenSidebar>
-    <RadzenBody>
-        @Body
-    </RadzenBody>
-</RadzenLayout>
-<RadzenComponents @rendermode="InteractiveServer" />
+@* Header *@
+<nav class="navbar navbar-expand-lg bg-primary" data-bs-theme="dark">
+    <div class="container-fluid">
+        <span class="navbar-brand">Tortis IAM</span>
+        <AuthorizeView>
+            <Authorized>
+                <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+                        @* <img src="https://github.com/mdo.png" alt="" width="32" height="32" class="rounded-circle me-2"> *@
+                        @* <strong>mdo</strong> *@
+                        <span class="bi bi-person-badge-fill rounded-circle" style="font-size: 24px"></span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1" style="">
+                        <li class="dropdown-item">
+                           
+                            <NavLink class="nav-link" href="account/manage">
+                                <span class="bi bi-person" aria-hidden="true"></span>
+                                Profile
+                            </NavLink>
+                        </li>
+                        <li class="dropdown-item">
+                            <form action="Account/Logout" method="post">
+                                <AntiforgeryToken/>
+                                <input type="hidden" name="ReturnUrl" value="account/login"/>
+                                <button type="submit" class="nav-link">
+                                    <span class="bi bi-arrow-bar-left" aria-hidden="true"></span> Logout
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </Authorized>
+        </AuthorizeView>
+        </div>
+</nav>
 
-<div id="blazor-error-ui">
-    An unhandled error has occurred.
-    <a href="" class="reload">Reload</a>
-    <a class="dismiss">🗙</a>
+<main>
+@* Sidebar *@
+<div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-light" style="width: 280px;">
+    <ul class="nav nav-pills flex-column mb-auto">
+        <li class="nav-item">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="bi bi-house-door-fill" aria-hidden="true"></span> Home
+            </NavLink>
+        </li>
+        <li>
+            <NavLink class="nav-link" href="users">
+                <span class="bi bi-person" aria-hidden="true"></span> Users
+            </NavLink>
+        </li>
+        <li>
+            <NavLink class="nav-link" href="roles">
+                <span class="bi bi-people" aria-hidden="true"></span> Roles
+            </NavLink>
+        </li>
+        <li>
+            <NavLink class="nav-link" href="apps">
+                <span class="bi bi-window" aria-hidden="true"></span> Applications
+            </NavLink>
+        </li>
+    </ul>
 </div>
 
-@code {
+@* Main Conent *@
 
-    bool _sidebar1Expanded = true;
-
-    void ToggleSidebar()
-    {
-        _sidebar1Expanded = !_sidebar1Expanded;
-    }
-
-}
+    <div class="d-flex flex-column flex-fill p-3">
+        @Body
+    </div>
+</main>

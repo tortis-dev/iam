@@ -1,62 +1,51 @@
-@page "/Users"
+@page "/users"
 @using Microsoft.AspNetCore.Authorization
 @using Tortis.Iam.Server.Data
+@using Microsoft.AspNetCore.Components.QuickGrid
 
 @inject ApplicationDbContext _dbContext;
+@inject NavigationManager Navigation;
 
 @attribute [Authorize]
+
+<PageTitle>Users</PageTitle>
 <h3>Users</h3>
 
-<RadzenDataGrid Data="_users">
-    <Columns>
-        <RadzenDataGridColumn Property="@nameof(ApplicationUser.UserName)" Title="Username" />
-        <RadzenDataGridColumn Property="@nameof(ApplicationUser.Email)" Title="Email Address"/>    
-        <RadzenDataGridColumn Property="@nameof(ApplicationUser.EmailConfirmed)" Title="Email Confirmed">
-            <Template Context="user">
-                @{
-                if (user.EmailConfirmed)
-                {
-                <RadzenIcon Icon="Check"/>
-                }
-                else
-                {
-                <RadzenIcon Icon="Close" IconColor="Red"/>
-                }
-                }
-            </Template>
-        </RadzenDataGridColumn>
-        <RadzenDataGridColumn Property="@nameof(ApplicationUser.PhoneNumber)" Title="Phone Number"/>
-        <RadzenDataGridColumn Property="@nameof(ApplicationUser.TwoFactorEnabled)" Title="2FA">
-            <Template Context="user">
-            @{
-                if (user.TwoFactorEnabled)
-                {
-                    <RadzenIcon Icon="Check"/>
-                }
-                else
-                {
-                    <RadzenIcon Icon="Close" IconColor="Red"/>
-                }
+<button class="btn btn-primary" style="width: 10rem">Add New</button>
+
+<QuickGrid Class="table table-striped table-hover" Items="_users">
+    <TemplateColumn Title="Username" Sortable="true" IsDefaultSortColumn="true">
+        <div class="p-2">
+            @context.UserName
+        </div>
+    </TemplateColumn>
+    <TemplateColumn Title="Email" Sortable="true">
+        <div class="p-2">
+            @context.Email
+        </div>
+    </TemplateColumn>
+    <TemplateColumn Title="2FA" Sortable="true">
+        <div class="p-2">
+            @if(context.TwoFactorEnabled)
+            {
+                <span class="bi bi-check-lg" style="color: green"></span>
             }
-            </Template>
-        </RadzenDataGridColumn>
-        <RadzenDataGridColumn Property="@nameof(ApplicationUser.LockoutEnabled)" Title="Lockout Enabled">
-            <Template Context="user">
-                @{
-                if (user.LockoutEnabled)
-                {
-                <RadzenIcon Icon="Check"/>
-                }
-                else
-                {
-                <RadzenIcon Icon="Close" IconColor="Red"/>
-                }
-                }
-            </Template>
-        </RadzenDataGridColumn>
-        <RadzenDataGridColumn Property="@nameof(ApplicationUser.LockoutEnd)" Title="Locked Until"/>
-    </Columns>
-</RadzenDataGrid>
+            else
+            {
+                <span class="bi bi-x-lg" style="color: darkred"></span>
+            }
+        </div>
+    </TemplateColumn>
+    <TemplateColumn Title="Locked" Sortable="true">
+        <div class="p-2">
+            @context.AccountLocked
+        </div>
+    </TemplateColumn>
+    <TemplateColumn>
+        <button class="btn btn-outline-primary" @onclick="@(() => Navigation.NavigateTo($"/users/{context.Id}"))"><span class="bi bi-pencil"></span></button>
+    </TemplateColumn>
+</QuickGrid>
+
 @code {
     IQueryable<ApplicationUser> _users;
 

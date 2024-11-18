@@ -1,0 +1,54 @@
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Serilog;
+using Tortis.Iam.Server.Data;
+
+namespace OpenIdConnectTests;
+
+public class ServerFixture : IDisposable
+{
+    public HttpClient Client { get; }
+    readonly string _databaseFile;
+    public ServerFixture()
+    {
+        _databaseFile = $"{Guid.NewGuid()}.db";
+        var container = new ServiceCollection()
+            .AddDbContext<ApplicationDbContext>(options => options.UseSqlite($"Filename={_databaseFile}"))
+            .BuildServiceProvider();
+        
+        using var scope = container.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        db.Database.EnsureCreated();
+        
+        var host = new WebApplicationFactory<Program>();
+        host.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                services.AddScoped<DbContextOptionsBuilder<ApplicationDbContext>>(_ =>
+                {
+                    var options = new DbContextOptionsBuilder<ApplicationDbContext>();
+                    options.UseSqlite($"Filename={_databaseFile}");
+                    return options;
+                });
+            });
+            builder.ConfigureLogging(logging =>
+            {
+                logging.AddSerilog(Log.Logger);
+            });
+        });
+       
+        Client = host.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost/")
+        });
+    }
+
+    public void Dispose()
+    {
+        foreach (var dbFile in Directory.GetFiles($".", $"{_databaseFile}*"))
+            File.Delete(dbFile);
+    }
+}

@@ -8,32 +8,8 @@
 }
 else
 {
-<RadzenLayout>
-        <RadzenHeader>
-            <RadzenRow AlignItems="AlignItems.Center" Style="height: 100%">
-                <RadzenColumn Size="5">
-                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Left" Gap="0">
-                        <RadzenLabel Text="Tortis IAM" />
-                    </RadzenStack>
-                </RadzenColumn>
-                <RadzenColumn Size="7">
-                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Right">
-
-                    </RadzenStack>
-                </RadzenColumn>
-            </RadzenRow>
-
-        </RadzenHeader>
-        <RadzenBody>
-            @Body
-        </RadzenBody>
-    </RadzenLayout>
-    <RadzenComponents @rendermode="InteractiveServer" />
-
-    <div id="blazor-error-ui">
-        An unhandled error has occurred.
-        <a href="" class="reload">Reload</a>
-        <a class="dismiss">🗙</a>
+    <div>
+        @Body
     </div>
 
 @code {

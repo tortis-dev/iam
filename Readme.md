@@ -34,3 +34,4 @@ Okta has a similar concept.
 https://developer.okta.com/docs/guides/set-up-token-exchange/main/#trusted-servers
 
 This mechanism could also be use to configure Federation?
+
