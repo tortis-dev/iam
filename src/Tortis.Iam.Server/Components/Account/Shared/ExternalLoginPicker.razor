@@ -2,7 +2,7 @@
 @using Microsoft.AspNetCore.Identity
 @using Tortis.Iam.Server.Data
 
-@inject SignInManager<ApplicationUser> SignInManager
+@inject SignInManager<IamUser> SignInManager
 @inject IdentityRedirectManager RedirectManager
 
 @if (externalLogins.Length == 0)
@@ -26,14 +26,16 @@ else
             <p>
                 @foreach (var provider in externalLogins)
                 {
-                    <button type="submit" class="btn btn-primary" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">@provider.DisplayName</button>
+                    <FluentButton Type="ButtonType.Submit" Name="provider" Value="@provider.Name" Title="@($"Log in using your {provider.DisplayName} account")">@provider.DisplayName</FluentButton>
+                    @* <button type="submit" class="btn btn-primary" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">@provider.DisplayName</button> *@
                 }
             </p>
         </div>
     </form>
 }
 
-@code {
+@code 
+{
     private AuthenticationScheme[] externalLogins = [];
 
     [SupplyParameterFromQuery] private string? ReturnUrl { get; set; }
@@ -42,5 +44,4 @@ else
     {
         externalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).ToArray();
     }
-
 }

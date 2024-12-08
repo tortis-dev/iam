@@ -1,0 +1,21 @@
+@inject IJSRuntime JS;
+@inject NavigationManager Navigation;
+@inject IHttpContextAccessor HttpContextAccessor;
+@rendermode InteractiveServer
+
+<form id="iam.logout.form" name="iam.logout.form" action="Account/Logout" method="post">
+    <AntiforgeryToken/>
+    <input type="hidden" name="ReturnUrl" value="account/login"/>
+</form>
+
+<script>
+    function signout(){
+        document.getElementById("iam.logout.form").submit();
+    }
+</script>
+
+<FluentProfileMenu 
+    FullName="@HttpContextAccessor?.HttpContext?.User?.Identity?.Name"
+    Initials="@(HttpContextAccessor?.HttpContext?.User?.Identity?.Name == "Admin" ? "A" : "")"
+    OnHeaderButtonClick="@(() => { JS.InvokeVoidAsync("signout"); })"
+    OnFooterLinkClick="@(() => Navigation.NavigateTo("account/manage"))"/>

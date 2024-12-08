@@ -5,63 +5,62 @@
 @using Microsoft.AspNetCore.Identity
 @using Tortis.Iam.Server.Data
 
-@inject SignInManager<ApplicationUser> SignInManager
+@inject SignInManager<IamUser> SignInManager
 @inject ILogger<Login> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 
 <PageTitle>Log in</PageTitle>
 
-<div class="card position-absolute top-50 start-50 translate-middle">
-    <div class="card-header text-center"><h3>Login</h3></div>
-    <div class="card-body row p-3">
-        <div class="col-md-6">
-            <section>
-                <StatusMessage Message="@errorMessage"/>
-                <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
-                    <DataAnnotationsValidator/>
-                    <div class="form-floating mb-3">
-                        <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com"/>
-                        <label for="email" class="form-label" style="color: darkslategray">Email or Username</label>
-                        <ValidationMessage For="() => Input.Email" class="text-danger"/>
-                    </div>
-                    <div class="form-floating mb-3">
-                        <InputText type="password" @bind-Value="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password"/>
-                        <label for="password" class="form-label" style="color: darkslategray">Password</label>
-                        <ValidationMessage For="() => Input.Password" class="text-danger"/>
-                    </div>
-                    <div class="checkbox mb-3">
-                        <label class="form-label">
-                            <InputCheckbox @bind-Value="Input.RememberMe" class="darker-border-checkbox form-check-input"/>
-                            Remember me
-                        </label>
-                    </div>
-                    <div>
-                        <button type="submit" class="w-100 btn btn-lg btn-dark">Log in</button>
-                    </div>
-                    <div style="margin-top: 15px">
-                        <p>
-                            <a href="Account/ForgotPassword">Forgot your password?</a>
-                        </p>
-                        <p>
-                            <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))">Register as a new user</a>
-                        </p>
-                        <p>
-                            <a href="Account/ResendEmailConfirmation">Resend email confirmation</a>
-                        </p>
-                    </div>
-                </EditForm>
-            </section>
-        </div>
-        <div class="col-md-6">
-            <section>
-                @* <h3>Use another service to log in.</h3> *@
-                @* <hr/> *@
-                <ExternalLoginPicker/>
-            </section>
-        </div>
-    </div>
-</div>
+<FluentGrid>
+    <FluentGridItem sm="12" md="6">
+        <section>
+            <h3>Login with IAM account</h3>
+            <StatusMessage Message="@errorMessage"/>
+            <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
+                <DataAnnotationsValidator/>
+                <div style="margin-bottom: 15px">
+                    <FluentTextField Placeholder="Email or Username" Name="Input.Email" @bind-Value="Input.Email" Style="width: 100%" />
+                    <FluentValidationMessage For="() => Input.Email" />
+                </div>
+                <div style="margin-bottom: 15px">
+                    <FluentTextField Placeholder="Password" Name="Input.Password" TextFieldType="TextFieldType.Password" @bind-Value="Input.Password" Style="width: 100%" />
+                    <FluentValidationMessage For="() => Input.Password" />
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <FluentCheckbox @bind-Value="Input.RememberMe" Name="Input.RememberMe" Label="Remember Me"></FluentCheckbox>
+                </div>
+                <div>
+                    <FluentButton Title="Login" Type="ButtonType.Submit" Appearance="Appearance.Accent"
+                                  Style="width: 100%">Log in</FluentButton>
+                </div>
+                <div style="margin-top: 15px">
+                    <p>
+                        <a href="Account/ForgotPassword">Forgot your password?</a>
+                    </p>
+                    <p>
+                        <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))">Register as a new user</a>
+                    </p>
+                    <p>
+                        <a href="Account/ResendEmailConfirmation">Resend email confirmation</a>
+                    </p>
+                </div>
+            </EditForm>
+        </section>
+    </FluentGridItem>
+    <FluentGridItem sm="12" md="1">
+        <h3>OR</h3>
+    </FluentGridItem>
+    <FluentGridItem sm="12" md="5">
+        <section>
+            <h3>Login with...</h3>
+            @* <hr/> *@
+            <ExternalLoginPicker/>
+        </section>
+    </FluentGridItem>
+</FluentGrid>
+
+
 @code {
     private string? errorMessage;
 

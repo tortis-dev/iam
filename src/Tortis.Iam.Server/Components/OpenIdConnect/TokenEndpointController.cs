@@ -9,19 +9,28 @@ namespace Tortis.Iam.Server.Components.OpenIdConnect;
 
 public class TokenEndpointController : ControllerBase
 {
+    /// <summary>
+    /// To obtain an Access Token, an ID Token, and optionally a Refresh Token, the RP (Client) sends a Token Request to
+    /// the Token Endpoint to obtain a Token Response, as described in Section 3.2 of OAuth 2.0 [RFC6749], when using
+    /// the Authorization Code Flow.
+    ///
+    /// https://openid.net/specs/openid-connect-core-1_0.html#TokenEndpoint
+    /// https://www.rfc-editor.org/rfc/rfc6749.html#section-3.2
+    /// </summary>
     [HttpPost("connect/token")]
     public async Task<IActionResult> Token()
     {
+        // Note:
+        // The client credentials are automatically validated by OpenIddict. If client_id or client_secret are invalid,
+        // this action won't be invoked.
+        
         var request = HttpContext.GetOpenIddictServerRequest() ??
                       throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
 
-        ClaimsPrincipal claimsPrincipal;
+        ClaimsPrincipal? claimsPrincipal;
 
         if (request.IsClientCredentialsGrantType())
         {
-            // Note: the client credentials are automatically validated by OpenIddict:
-            // if client_id or client_secret are invalid, this action won't be invoked.
-
             var identity = new ClaimsIdentity(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
 
             // Subject (sub) is a required field, we use the client id as the subject identifier here.
@@ -48,9 +57,11 @@ public class TokenEndpointController : ControllerBase
         {
             throw new InvalidOperationException("The specified grant type is not supported.");
         }
-
+        
+        if (claimsPrincipal is null)
+            throw new InvalidOperationException("Unable to create claims principal.");
+        
         // Returning a SignInResult will ask OpenIddict to issue the appropriate access/identity tokens.
         return SignIn(claimsPrincipal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
-
     }
 }

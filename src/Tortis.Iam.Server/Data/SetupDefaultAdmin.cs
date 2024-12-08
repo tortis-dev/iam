@@ -5,8 +5,8 @@ namespace Tortis.Iam.Server.Data;
 
 sealed class SetupDefaultAdmin : BackgroundService
 {
-    private IServiceProvider _container;
-    private ILogger<SetupDefaultAdmin> _logger;
+    IServiceProvider _container;
+    ILogger<SetupDefaultAdmin> _logger;
 
     public SetupDefaultAdmin(IServiceProvider container, ILogger<SetupDefaultAdmin> logger)
     {
@@ -36,19 +36,20 @@ sealed class SetupDefaultAdmin : BackgroundService
         const string username = "Admin";
         const string defaultPassword = "Admin1234!";
         
-        var userManager = container.GetRequiredService<UserManager<ApplicationUser>>();
-        var store = container.GetRequiredService<IUserStore<ApplicationUser>>();
+        var userManager = container.GetRequiredService<UserManager<IamUser>>();
+        var store = container.GetRequiredService<IUserStore<IamUser>>();
         
         var normalizedUsername = userManager.NormalizeName(username);
         var admin = await store.FindByNameAsync(normalizedUsername, stoppingToken);
 
         if (admin is null)
         {
-            admin = new ApplicationUser();
-            await store.SetUserNameAsync(admin, username, stoppingToken);
+            admin = new IamUser
+            {
+                UserName = username,
+                EmailConfirmed = true
+            };
             
-            admin.EmailConfirmed = true;
-
             var result = await userManager.CreateAsync(admin, defaultPassword);
 
             if (!result.Succeeded)

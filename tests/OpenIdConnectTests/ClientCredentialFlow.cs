@@ -8,8 +8,8 @@ namespace OpenIdConnectTests;
 
 public class ClientCredentialFlow: IClassFixture<ServerFixture>
 {
-    private readonly ServerFixture _server;
-    private readonly ITestOutputHelper _output;
+    readonly ServerFixture _server;
+    readonly ITestOutputHelper _output;
 
     public ClientCredentialFlow(ServerFixture server, ITestOutputHelper output)
     {

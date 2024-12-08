@@ -1,71 +1,27 @@
 ﻿@inherits LayoutComponentBase
+@rendermode InteractiveServer
 
-@* Header *@
-<nav class="navbar navbar-expand-lg bg-primary" data-bs-theme="dark">
-    <div class="container-fluid">
-        <span class="navbar-brand">Tortis IAM</span>
-        <AuthorizeView>
-            <Authorized>
-                <div class="dropdown">
-                    <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
-                        @* <img src="https://github.com/mdo.png" alt="" width="32" height="32" class="rounded-circle me-2"> *@
-                        @* <strong>mdo</strong> *@
-                        <span class="bi bi-person-badge-fill rounded-circle" style="font-size: 24px"></span>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1" style="">
-                        <li class="dropdown-item">
-                           
-                            <NavLink class="nav-link" href="account/manage">
-                                <span class="bi bi-person" aria-hidden="true"></span>
-                                Profile
-                            </NavLink>
-                        </li>
-                        <li class="dropdown-item">
-                            <form action="Account/Logout" method="post">
-                                <AntiforgeryToken/>
-                                <input type="hidden" name="ReturnUrl" value="account/login"/>
-                                <button type="submit" class="nav-link">
-                                    <span class="bi bi-arrow-bar-left" aria-hidden="true"></span> Logout
-                                </button>
-                            </form>
-                        </li>
-                    </ul>
-                </div>
-            </Authorized>
-        </AuthorizeView>
-        </div>
-</nav>
+<FluentToastProvider MaxToastCount="50" Timeout="5000" Position="ToastPosition.TopCenter" @rendermode="InteractiveServer"/>
+<FluentDialogProvider @rendermode="InteractiveServer"/>
+<FluentTooltipProvider @rendermode="InteractiveServer"/>
+<FluentMessageBarProvider Section="Main" @rendermode="InteractiveServer"/>
+<FluentMenuProvider/>
 
-<main>
-@* Sidebar *@
-<div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-light" style="width: 280px;">
-    <ul class="nav nav-pills flex-column mb-auto">
-        <li class="nav-item">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill" aria-hidden="true"></span> Home
-            </NavLink>
-        </li>
-        <li>
-            <NavLink class="nav-link" href="users">
-                <span class="bi bi-person" aria-hidden="true"></span> Users
-            </NavLink>
-        </li>
-        <li>
-            <NavLink class="nav-link" href="roles">
-                <span class="bi bi-people" aria-hidden="true"></span> Roles
-            </NavLink>
-        </li>
-        <li>
-            <NavLink class="nav-link" href="apps">
-                <span class="bi bi-window" aria-hidden="true"></span> Applications
-            </NavLink>
-        </li>
-    </ul>
-</div>
-
-@* Main Conent *@
-
-    <div class="d-flex flex-column flex-fill p-3">
-        @Body
-    </div>
-</main>
+<FluentLayout>
+    <FluentHeader>
+        Tortis IAM
+        <FluentSpacer />
+        <TortisProfileMenu />
+    </FluentHeader>
+    <FluentStack Orientation="Orientation.Horizontal" Style="width: 100%">
+        <FluentNavMenu Width="250" Collapsible="true">
+            <FluentNavLink Icon="@(new Icons.Regular.Size24.Home())" Href="/" Tooltip="Home" Match="NavLinkMatch.All">Home</FluentNavLink>
+            <FluentNavLink Icon="@(new Icons.Regular.Size24.Person())" Href="users" Tooltip="Users">Users</FluentNavLink>
+            <FluentNavLink Icon="@(new Icons.Regular.Size24.People())" Href="roles" Tooltip="Roles">Roles</FluentNavLink>
+            <FluentNavLink Icon="@(new Icons.Regular.Size24.Apps())" Href="apps" Tooltip="Applications">Applications</FluentNavLink>
+        </FluentNavMenu>
+        <FluentBodyContent>
+            @Body
+        </FluentBodyContent>
+    </FluentStack>
+</FluentLayout>

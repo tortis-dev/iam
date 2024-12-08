@@ -1,38 +1,28 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using Tortis.Iam.Server.Data
 
-@inject SignInManager<ApplicationUser> SignInManager
+@inject SignInManager<IamUser> SignInManager
 
-<ul class="nav nav-pills flex-column">
-    <li class="nav-item">
-        <NavLink class="nav-link" href="Account/Manage" Match="NavLinkMatch.All">Profile</NavLink>
-    </li>
-    <li class="nav-item">
-        <NavLink class="nav-link" href="Account/Manage/Email">Email</NavLink>
-    </li>
-    <li class="nav-item">
-        <NavLink class="nav-link" href="Account/Manage/ChangePassword">Password</NavLink>
-    </li>
-    @if (hasExternalLogins)
+
+<FluentNavMenu Width="350">
+    <FluentNavLink Icon="@(new Icons.Filled.Size24.Person())" Href="Account/Manage" Match="NavLinkMatch.All">Profile</FluentNavLink>
+    <FluentNavLink Icon="@(new Icons.Filled.Size24.Mail())" Href="Account/Manage/Email">Email</FluentNavLink>
+    <FluentNavLink Icon="@(new Icons.Filled.Size24.Password())" Href="Account/Manage/ChangePassword">Password</FluentNavLink>
+    @if (_hasExternalLogins)
     {
-        <li class="nav-item">
-            <NavLink class="nav-link" href="Account/Manage/ExternalLogins">External logins</NavLink>
-        </li>
+        <FluentNavLink Icon="@(new Icons.Regular.Size24.Guardian())" Href="Account/Manage/ExternalLogins">External logins</FluentNavLink>
     }
-    <li class="nav-item">
-        <NavLink class="nav-link" href="Account/Manage/TwoFactorAuthentication">Two-factor authentication</NavLink>
-    </li>
-    <li class="nav-item">
-        <NavLink class="nav-link" href="Account/Manage/PersonalData">Personal data</NavLink>
-    </li>
-</ul>
+    <FluentNavLink Icon="@(new Icons.Filled.Size24.Shield())" Href="Account/Manage/TwoFactorAuthentication">Two-factor authentication</FluentNavLink>
+    <FluentNavLink Icon="@(new Icons.Filled.Size24.Database())" Href="Account/Manage/PersonalData">Personal data</FluentNavLink>
+</FluentNavMenu>
+
 
 @code {
-    private bool hasExternalLogins;
+    private bool _hasExternalLogins;
 
     protected override async Task OnInitializedAsync()
     {
-        hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
+        _hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
     }
 
 }

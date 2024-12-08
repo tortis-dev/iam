@@ -1,0 +1,53 @@
+@page "/add-user"
+
+@using System.ComponentModel.DataAnnotations
+@using System.Text.Encodings.Web
+@using Microsoft.AspNetCore.Identity
+@using Tortis.Iam.Server.Data
+
+@inject UserManager<IamUser> UserManager
+@inject IEmailSender<IamUser> EmailSender
+@inject NavigationManager NavigationManager
+
+<h3>Add User</h3>
+
+<FluentEditForm Model="Model" OnValidSubmit="Submit">
+    <DataAnnotationsValidator/>
+    <FluentTextField @bind-Value="Model.Email" Label="Email Address"></FluentTextField>
+    <FluentValidationMessage For="() => Model.Email"></FluentValidationMessage>
+    <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent">Save</FluentButton>
+</FluentEditForm>
+
+@code {
+
+    private sealed class InputModel
+    {
+        [Required, EmailAddress]
+        public string Email { get; set; }
+    };
+    
+    InputModel Model { get; } = new();
+
+    async Task Submit()
+    {
+        var user = new IamUser
+        {
+            UserName = Model.Email,
+            Email = Model.Email
+        };
+
+        
+       
+        var result = await UserManager.CreateAsync(user, PasswordGenerator.Generate(32));
+        
+        if (!result.Succeeded)
+            return;
+        
+        var resetToken = await UserManager.GenerateEncodedPasswordResetTokenAsync(user);
+        var resetLink = NavigationManager.GeneratePasswordResetLink(resetToken);
+        
+        await EmailSender.SendPasswordResetLinkAsync(user, Model.Email, HtmlEncoder.Default.Encode(resetLink));
+        
+        NavigationManager.NavigateTo("/users");
+    }
+}

@@ -3,8 +3,8 @@
 @using Microsoft.AspNetCore.Identity
 @using Tortis.Iam.Server.Data
 
-@inject UserManager<ApplicationUser> UserManager
-@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<IamUser> UserManager
+@inject SignInManager<IamUser> SignInManager
 @inject IdentityUserAccessor UserAccessor
 @inject IdentityRedirectManager RedirectManager
 @inject ILogger<ResetAuthenticator> Logger

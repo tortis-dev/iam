@@ -1,0 +1,17 @@
+@page "/not-found/{statusCode:int}"
+@attribute [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+
+@using Microsoft.AspNetCore.Mvc
+
+@switch (StatusCode)
+{
+    case 404:
+        <h3>These are not the droids you're looking for.</h3>
+        break;
+}
+
+@code {
+    [Parameter]
+    public int? StatusCode { get; set; }
+    
+}

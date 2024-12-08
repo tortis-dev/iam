@@ -3,11 +3,11 @@ using Tortis.Iam.Server.Data;
 
 namespace Tortis.Iam.Server.Components.Account;
 
-internal sealed class IdentityUserAccessor(
-    UserManager<ApplicationUser> userManager,
+sealed class IdentityUserAccessor(
+    UserManager<IamUser> userManager,
     IdentityRedirectManager redirectManager)
 {
-    public async Task<ApplicationUser> GetRequiredUserAsync(HttpContext context)
+    public async Task<IamUser> GetRequiredUserAsync(HttpContext context)
     {
         var user = await userManager.GetUserAsync(context.User);
 

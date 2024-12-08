@@ -1,4 +1,5 @@
-﻿@inherits LayoutComponentBase
+﻿@using Tortis.Iam.Server.Components.Layout
+@inherits LayoutComponentBase
 @* @layout Tortis.Iam.Server.Components.Layout.MainLayout *@
 @inject NavigationManager NavigationManager
 
@@ -8,21 +9,18 @@
 }
 else
 {
-    <div>
-        @Body
-    </div>
-
-@code {
-
-    bool _sidebar1Expanded = true;
-
-    void ToggleSidebar()
-    {
-        _sidebar1Expanded = !_sidebar1Expanded;
-    }
-
+    <FluentLayout>
+        <FluentHeader>
+            Tortis IAM
+            <FluentSpacer />
+            <TortisProfileMenu />
+        </FluentHeader>
+        <FluentBodyContent>
+            @Body
+        </FluentBodyContent>
+    </FluentLayout>
 }
-}
+
 
 @code {
     [CascadingParameter] private HttpContext? HttpContext { get; set; }

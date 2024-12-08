@@ -1,44 +1,49 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
-using Radzen;
+using Microsoft.FluentUI.AspNetCore.Components;
 using Tortis.Iam.Server.Components;
 using Tortis.Iam.Server.Components.Account;
 using Tortis.Iam.Server.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure Kestrel
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.AddServerHeader = false;
+    options.ConfigureEndpointDefaults(endpoint => endpoint.UseHttps());
+});
+
+// Configure MVC
 builder.Services.AddControllers();
 
-// Add services to the container.
+// Configure Blazor
 builder.Services
+    .AddFluentUIComponents()
     .AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddQuickGridEntityFrameworkAdapter();
-
-builder.Services.AddCascadingAuthenticationState();
-builder.Services.AddScoped<IdentityUserAccessor>();
-builder.Services.AddScoped<IdentityRedirectManager>();
-builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
-
-builder.Services.AddAuthentication(options =>
+// Authentication/Authorization (for IAM itself)
+builder.Services
+    .AddCascadingAuthenticationState()
+    .AddAuthentication(options =>
     {
         options.DefaultScheme = IdentityConstants.ApplicationScheme;
         options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
     })
     .AddIdentityCookies();
 
+// Database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
                        throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+builder.Services.AddDbContext<IamDbContext>(options =>
 {
     options.UseSqlServer(connectionString,
         sql => sql.MigrationsHistoryTable("iam_schema_migrations_history", "iam"));
-
-    // options.UseSqlite(connectionString,
-    //     sql => sql.MigrationsHistoryTable("iam_schema_migrations_history"));
     
+    // Use OpenIdDict entities with Guid ID type
     options.UseOpenIddict<Guid>();
     
 });
@@ -50,7 +55,7 @@ builder.Services.AddOpenIddict()
     {
         options
             .UseEntityFrameworkCore()
-            .UseDbContext<ApplicationDbContext>()
+            .UseDbContext<IamDbContext>()
             .ReplaceDefaultEntities<Guid>();
     })
     .AddServer(options =>
@@ -58,15 +63,18 @@ builder.Services.AddOpenIddict()
         options.SetTokenEndpointUris("connect/token");
         options.SetAuthorizationEndpointUris("connect/authorize");
         options.SetConfigurationEndpointUris(".well-known/openid-configuration");
-        options.AllowClientCredentialsFlow();
+        options.AllowClientCredentialsFlow().RequireProofKeyForCodeExchange();
         options.AllowAuthorizationCodeFlow();
         options.AllowHybridFlow();
         options.AllowRefreshTokenFlow();
+        
+        options.DisableAccessTokenEncryption(); // TODO: From Config
 
-        options.AddDevelopmentSigningCertificate();
-        options.DisableAccessTokenEncryption();
-        //Data Encryption
-        options.AddDevelopmentEncryptionCertificate();
+        if (builder.Environment.IsDevelopment())
+        {
+            options.AddDevelopmentEncryptionCertificate(); //Data Encryption
+            options.AddDevelopmentSigningCertificate();
+        }
 
         options.UseAspNetCore()
             .EnableTokenEndpointPassthrough()
@@ -75,13 +83,18 @@ builder.Services.AddOpenIddict()
 
 //Identity
 builder.Services
-    .AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>()
-    .AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddScoped<IdentityUserAccessor>()
+    .AddScoped<IdentityRedirectManager>()
+    .AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>()
+    .AddSingleton<IEmailSender<IamUser>, IdentityNoOpEmailSender>()
+    .AddIdentityCore<IamUser>(options => options.SignIn.RequireConfirmedAccount = true) //TODO: from config
     .AddRoles<IdentityRole<Guid>>()
-    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddEntityFrameworkStores<IamDbContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
+// Application services
+builder.Services.AddHealthChecks();
 builder.Services.AddHostedService<SetupDefaultAdmin>();
 
 var app = builder.Build();
@@ -93,20 +106,25 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
+    app.UseExceptionHandler("/error", createScopeForErrors: true);
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
 
+// https://learn.microsoft.com/en-us/aspnet/core/fundamentals/error-handling?view=aspnetcore-8.0#usestatuscodepageswithredirects
+//Keeps original URL in address bar, does not render layout
+//app.UseStatusCodePagesWithReExecute("/not-found");
+//Renders layout but changes url in address bar;
+app.UseStatusCodePagesWithRedirects("/not-found/{0}");
 app.UseStaticFiles();
 app.UseAntiforgery();
-
+app.MapHealthChecks("/health");
 app.MapControllers();
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
+
 app.Run();

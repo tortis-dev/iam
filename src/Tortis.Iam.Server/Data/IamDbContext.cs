@@ -5,9 +5,11 @@ using OpenIddict.EntityFrameworkCore.Models;
 
 namespace Tortis.Iam.Server.Data;
 
-public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-    : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>(options)
+public class IamDbContext : IdentityDbContext<IamUser, IdentityRole<Guid>, Guid>
 {
+    public IamDbContext(DbContextOptions<IamDbContext> options) : base(options)
+    { }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         base.OnConfiguring(optionsBuilder);
@@ -18,11 +20,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     {
         base.OnModelCreating(builder);
         
-        if (!base.Database.IsSqlite())
+        if (base.Database.IsSqlServer())
             builder.HasDefaultSchema("iam");
 
         // Identity Tables
-        builder.Entity<ApplicationUser>(user =>
+        builder.Entity<IamUser>(user =>
         {
             user.ToTable("iam_users");
             user.Ignore(p => p.AccountLocked);

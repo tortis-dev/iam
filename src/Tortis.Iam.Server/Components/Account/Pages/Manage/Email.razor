@@ -7,8 +7,8 @@
 @using Microsoft.AspNetCore.WebUtilities
 @using Tortis.Iam.Server.Data
 
-@inject UserManager<ApplicationUser> UserManager
-@inject IEmailSender<ApplicationUser> EmailSender
+@inject UserManager<IamUser> UserManager
+@inject IEmailSender<IamUser> EmailSender
 @inject IdentityUserAccessor UserAccessor
 @inject NavigationManager NavigationManager
 
@@ -55,7 +55,7 @@
 
 @code {
     private string? message;
-    private ApplicationUser user = default!;
+    private IamUser user = default!;
     private string? email;
     private bool isEmailConfirmed;
 

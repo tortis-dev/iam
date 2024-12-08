@@ -1,0 +1,79 @@
+@page "/users"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@using Tortis.Iam.Server.Data
+
+@inject IamDbContext IamDbContext;
+@inject NavigationManager Navigation;
+
+@attribute [Authorize]
+
+<PageTitle>Users</PageTitle>
+<h3>Users</h3>
+<FluentButton Appearance="Appearance.Accent" OnClick="@(() => Navigation.NavigateTo("/add-user"))">New User</FluentButton>
+<FluentDataGrid Items="_users">
+    <PropertyColumn Property="p => p.UserName" Title="Username" Sortable="true" IsDefaultSortColumn="true" />
+    <PropertyColumn Property="p => p.Email" Title="Email" Sortable="true" />
+    <TemplateColumn Title="2FA" Sortable="true">
+            @if(context.TwoFactorEnabled)
+            {
+                <FluentIcon Value="@(new Icons.Regular.Size16.Checkmark())" Color="Color.Success" />
+            }
+            else
+            {
+                <FluentIcon Value="@(new Icons.Regular.Size16.Dismiss())" Color="Color.Error" />
+            }
+    </TemplateColumn>
+    <TemplateColumn Title="Locked" Sortable="true">
+        @if(context.AccountLocked)
+        {
+            <FluentIcon Value="@(new Icons.Regular.Size16.LockClosed())" Color="Color.Error" Title="Account is locked." />
+        }
+        else
+        {
+            <FluentIcon Value="@(new Icons.Regular.Size16.LockOpen())" Color="Color.Success" Title="Account is unlocked." />
+        }
+    </TemplateColumn>
+    <TemplateColumn Title="Actions">
+        <FluentButton OnClick="@(() => Navigation.NavigateTo($"users/{context.Id}"))">
+            <FluentIcon Value="@(new Icons.Regular.Size16.Edit())" Color="Color.Neutral"></FluentIcon>
+        </FluentButton>
+        <FluentButton>
+            <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error"></FluentIcon>
+        </FluentButton>
+    </TemplateColumn>
+</FluentDataGrid>
+
+@* <button class="btn btn-primary" style="width: 10rem">Add New</button> *@
+@* *@
+@* <QuickGrid Class="table table-striped table-hover" Items="_users"> *@
+@*     <TemplateColumn Title="Username" Sortable="true" IsDefaultSortColumn="true"> *@
+@*         <div class="p-2"> *@
+@*             @context.UserName *@
+@*         </div> *@
+@*     </TemplateColumn> *@
+@*     <TemplateColumn Title="Email" Sortable="true"> *@
+@*         <div class="p-2"> *@
+@*             @context.Email *@
+@*         </div> *@
+@*     </TemplateColumn> *@
+
+@*     <TemplateColumn Title="Locked" Sortable="true"> *@
+@*         <div class="p-2"> *@
+@*             @context.AccountLocked *@
+@*         </div> *@
+@*     </TemplateColumn> *@
+@*     <TemplateColumn> *@
+@*         <button class="btn btn-outline-primary" @onclick="@(() => Navigation.NavigateTo($"/users/{context.Id}"))"><span class="bi bi-pencil"></span></button> *@
+@*     </TemplateColumn> *@
+@* </QuickGrid> *@
+
+@code {
+    IQueryable<IamUser> _users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        _users = IamDbContext.Users;
+    }
+}

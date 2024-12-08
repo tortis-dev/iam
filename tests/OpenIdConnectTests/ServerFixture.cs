@@ -15,11 +15,11 @@ public class ServerFixture : IDisposable
     {
         _databaseFile = $"{Guid.NewGuid()}.db";
         var container = new ServiceCollection()
-            .AddDbContext<ApplicationDbContext>(options => options.UseSqlite($"Filename={_databaseFile}"))
+            .AddDbContext<IamDbContext>(options => options.UseSqlite($"Filename={_databaseFile}"))
             .BuildServiceProvider();
         
         using var scope = container.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var db = scope.ServiceProvider.GetRequiredService<IamDbContext>();
         db.Database.EnsureCreated();
         
         var host = new WebApplicationFactory<Program>();
@@ -27,9 +27,9 @@ public class ServerFixture : IDisposable
         {
             builder.ConfigureServices(services =>
             {
-                services.AddScoped<DbContextOptionsBuilder<ApplicationDbContext>>(_ =>
+                services.AddScoped<DbContextOptionsBuilder<IamDbContext>>(_ =>
                 {
-                    var options = new DbContextOptionsBuilder<ApplicationDbContext>();
+                    var options = new DbContextOptionsBuilder<IamDbContext>();
                     options.UseSqlite($"Filename={_databaseFile}");
                     return options;
                 });

@@ -8,7 +8,7 @@ namespace OpenIdConnectTests;
 
 public class Discovery : IClassFixture<ServerFixture>
 {
-    private ServerFixture _server;
+    readonly ServerFixture _server;
 
     public Discovery(ServerFixture server, ITestOutputHelper output)
     {

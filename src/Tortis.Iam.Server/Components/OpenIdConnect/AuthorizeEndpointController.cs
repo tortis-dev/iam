@@ -5,20 +5,26 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
-using Tortis.Iam.Server.Data;
 
 namespace Tortis.Iam.Server.Components.OpenIdConnect;
 
 public class AuthorizeEndpointController : ControllerBase
 {
     readonly IOpenIddictScopeManager _scopeManager;
-
-
+    
     public AuthorizeEndpointController(IOpenIddictScopeManager scopeManager)
     {
         _scopeManager = scopeManager;
     }
 
+    /// <summary>
+    /// The Authorization Endpoint performs Authentication of the End-User. This is done by sending the User Agent to
+    /// the Authorization Server's Authorization Endpoint for Authentication and Authorization, using request parameters
+    /// defined by OAuth 2.0 and additional parameters and parameter values defined by OpenID Connect.
+    ///
+    /// https://openid.net/specs/openid-connect-core-1_0.html#AuthorizationEndpoint
+    /// https://www.rfc-editor.org/rfc/rfc6749.html#section-3.1
+    /// </summary>
     [HttpGet("connect/authorize")]
     [HttpPost("connect/authorize")]
     [IgnoreAntiforgeryToken]
@@ -26,7 +32,7 @@ public class AuthorizeEndpointController : ControllerBase
     {
         var request = HttpContext.GetOpenIddictServerRequest() ??
                       throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
-
+        
         // Retrieve the user principal stored in the authentication cookie.
         var authenticationResult = await HttpContext.AuthenticateAsync(IdentityConstants.ApplicationScheme);
 
@@ -42,12 +48,14 @@ public class AuthorizeEndpointController : ControllerBase
                 });
         }
 
+        // HACK: This should never be null. Do we want to handle it better?
+        var nameClaimValue = authenticationResult.Principal!.Identity!.Name ?? Guid.NewGuid().ToString();
         
         // Create a new claims principal
         var claims = new List<Claim>
         {
-            new(OpenIddictConstants.Claims.Subject, authenticationResult.Principal.Identity.Name),
-            new(OpenIddictConstants.Claims.Name, authenticationResult.Principal.Identity.Name)
+            new(OpenIddictConstants.Claims.Subject, nameClaimValue),
+            new(OpenIddictConstants.Claims.Name, nameClaimValue)
         };
 
         var roles = authenticationResult.Principal.Claims.Where(c => c.Type == ClaimTypes.Role)
