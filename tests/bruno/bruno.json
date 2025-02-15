@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Tortis.Iam",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
