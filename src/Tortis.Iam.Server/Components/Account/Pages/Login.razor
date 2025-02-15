@@ -1,4 +1,4 @@
-﻿@page "/Account/Login"
+﻿@page "/account/login"
 @layout LoginLayout
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Authentication
@@ -16,7 +16,7 @@
     <FluentGridItem sm="12" md="6">
         <section>
             <h3>Login with IAM account</h3>
-            <StatusMessage Message="@errorMessage"/>
+            <StatusMessage Message="@_errorMessage"/>
             <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
                 <DataAnnotationsValidator/>
                 <div style="margin-bottom: 15px">
@@ -36,13 +36,13 @@
                 </div>
                 <div style="margin-top: 15px">
                     <p>
-                        <a href="Account/ForgotPassword">Forgot your password?</a>
+                        <a href="account/forgotpassword">Forgot your password?</a>
                     </p>
                     <p>
-                        <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))">Register as a new user</a>
+                        <a href="@(NavigationManager.GetUriWithQueryParameters("account/register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))">Register as a new user</a>
                     </p>
                     <p>
-                        <a href="Account/ResendEmailConfirmation">Resend email confirmation</a>
+                        <a href="account/resendemailconfirmation">Resend email confirmation</a>
                     </p>
                 </div>
             </EditForm>
@@ -62,7 +62,7 @@
 
 
 @code {
-    private string? errorMessage;
+    private string? _errorMessage;
 
     [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
 
@@ -86,7 +86,7 @@
         var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
         if (result.Succeeded)
         {
-            Logger.LogInformation("User logged in.");
+            Logger.LogTrace("User logged in.");
             RedirectManager.RedirectTo(ReturnUrl);
         }
         else if (result.RequiresTwoFactor)
@@ -102,19 +102,21 @@
         }
         else
         {
-            errorMessage = "Error: Invalid login attempt.";
+            _errorMessage = "Error: Invalid login attempt.";
         }
     }
 
     private sealed class InputModel
     {
-        [Required] public string Email { get; set; } = "";
+        [Required] 
+        public string Email { get; set; } = "";
 
         [Required]
         [DataType(DataType.Password)]
         public string Password { get; set; } = "";
 
-        [Display(Name = "Remember me?")] public bool RememberMe { get; set; }
+        [Display(Name = "Remember me?")]
+        public bool RememberMe { get; set; }
     }
 
 }

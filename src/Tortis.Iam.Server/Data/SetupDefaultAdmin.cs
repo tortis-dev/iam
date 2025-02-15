@@ -5,8 +5,8 @@ namespace Tortis.Iam.Server.Data;
 
 sealed class SetupDefaultAdmin : BackgroundService
 {
-    IServiceProvider _container;
-    ILogger<SetupDefaultAdmin> _logger;
+    readonly IServiceProvider _container;
+    readonly ILogger<SetupDefaultAdmin> _logger;
 
     public SetupDefaultAdmin(IServiceProvider container, ILogger<SetupDefaultAdmin> logger)
     {
@@ -19,10 +19,21 @@ sealed class SetupDefaultAdmin : BackgroundService
 
         await using var scope = _container.CreateAsyncScope();
 
-        await CreateAdministratorRoleAsync(scope.ServiceProvider);
-        await CreateAdminUserAsync(scope.ServiceProvider, stoppingToken);
-        await CreateTestResourceAsync(scope.ServiceProvider, stoppingToken);
-        await CreateTestClientAsync(scope.ServiceProvider, stoppingToken);
+        try
+        {
+            await CreateAdministratorRoleAsync(scope.ServiceProvider);
+            await CreateAdminUserAsync(scope.ServiceProvider, stoppingToken);
+            await CreateTestResourceAsync(scope.ServiceProvider, stoppingToken);
+            await CreateTestClientAsync(scope.ServiceProvider, stoppingToken);
+        }
+        catch (Exception ex)
+        {
+            // We don't want to crash the microservice, but we do want to log a critical message.
+            // A generic exception is being caught here because database errors are raised as their respective
+            // platform exception--e.g. Microsoft.Data.SqlClient.SqlException.
+            
+            _logger.LogCritical(ex, "An exception occurred while setting up the default administrator account.");
+        }
     }
 
     async Task CreateAdministratorRoleAsync(IServiceProvider container)
@@ -73,14 +84,11 @@ sealed class SetupDefaultAdmin : BackgroundService
         {
             await applicationManager.CreateAsync(new OpenIddictApplicationDescriptor
             {
-                //ClientType = OpenIddictConstants.ClientTypes.Confidential,
                 DisplayName = "Test Resource",
                 ClientId = resourceId,
-                RedirectUris = { new Uri("uri:signin") },
-                //ApplicationType = OpenIddictConstants.ApplicationTypes.Web,
+                RedirectUris = { new Uri("uri:signin"), new Uri("https://localhost:5001/signin-oidc") },
             }, stoppingToken);
         }
-
         
         var scopeManager = container.GetRequiredService<IOpenIddictScopeManager>();
         var fullaccessScope = await scopeManager.FindByNameAsync("fullaccess");
@@ -107,7 +115,8 @@ sealed class SetupDefaultAdmin : BackgroundService
         
         await applicationManager.CreateAsync(new OpenIddictApplicationDescriptor
         {
-            ClientType = OpenIddictConstants.ClientTypes.Confidential,
+            ApplicationType = OpenIddictConstants.ApplicationTypes.Web, // AspNet Core MVC
+            ClientType = OpenIddictConstants.ClientTypes.Confidential, // Using backchannel auth
             DisplayName = "Test Client",
             ClientId = clientId,
             ClientSecret = clientSecret,
@@ -121,7 +130,10 @@ sealed class SetupDefaultAdmin : BackgroundService
                 OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
                 
                 OpenIddictConstants.Permissions.Prefixes.Scope + "fullaccess",
-                
+                OpenIddictConstants.Permissions.Scopes.Profile,
+                OpenIddictConstants.Permissions.Scopes.Email,
+                OpenIddictConstants.Permissions.Scopes.Roles,
+
                 OpenIddictConstants.Permissions.ResponseTypes.Code,
                 OpenIddictConstants.Permissions.ResponseTypes.Token,
                 OpenIddictConstants.Permissions.ResponseTypes.CodeToken,
@@ -130,8 +142,7 @@ sealed class SetupDefaultAdmin : BackgroundService
                 OpenIddictConstants.Permissions.ResponseTypes.IdToken,
                 OpenIddictConstants.Permissions.ResponseTypes.IdTokenToken,
             },
-            RedirectUris = { new Uri("uri:signin") },
-            ApplicationType = OpenIddictConstants.ApplicationTypes.Web,
+            RedirectUris = { new Uri("uri:signin"), new Uri("https://localhost:5001/signin-oidc") },
         }, stoppingToken);
 
     }
