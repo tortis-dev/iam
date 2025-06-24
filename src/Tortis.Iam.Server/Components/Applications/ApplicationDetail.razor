@@ -1,0 +1,121 @@
+@using System.Net.Mime
+@using OpenIddict.Abstractions
+
+@inject IOpenIddictApplicationManager ApplicationManager;
+@inject NavigationManager NavigationManager
+@inject IDialogService DialogService;
+@inject ILogger<ApplicationDetail> Logger;
+
+<FluentEditForm Model="Model" OnValidSubmit="Submit">
+    <FluentGrid Justify="JustifyContent.FlexStart">
+        <FluentGridItem md="6">
+            <FluentStack Orientation="Orientation.Vertical">
+
+                <DataAnnotationsValidator/>
+                <FluentTextField @bind-Value="Model.Name" Label="Display Name" Style="width: 100%" />
+                <FluentValidationMessage For="() => Model.Name" />
+                <FluentSelect Label="Application Type" 
+                              Items="@AppTypes"
+                              OptionValue="@(type => type.Value)"
+                              OptionText="@(type => type.Text)"
+                              OptionSelected="@(type => type.Selected)"
+                              @bind-SelectedOption="@(_selectedAppType)"
+                              @bind-Value="Model.ApplicationType"
+                              Width="100%" />
+                <FluentSelect Label="Client Type"
+                              Items="@ClientTypes"
+                              OptionValue="@(type => type.Value)"
+                              OptionText="@(type => type.Text)"
+                              OptionSelected="@(type => type.Selected)"
+                              @bind-SelectedOption="@(_selectedClientType)"
+                              @bind-Value="Model.ClientType"
+                              Width="100%" />
+                <FluentTextField @bind-Value="Model.RedirectUris" Label="Redirect URIs" Style="width: 100%" />
+
+                <FluentStack Orientation="Orientation.Horizontal" Width="100%" HorizontalAlignment="HorizontalAlignment.Left" >
+                    <h4>Permissions (Allowed application scopes)</h4>
+                    <FluentStack Orientation="Orientation.Horizontal" Width="100%" HorizontalAlignment="HorizontalAlignment.Right" >
+                        <FluentButton Type="ButtonType.Button" Appearance="Appearance.Accent">Add Permission</FluentButton>
+                    </FluentStack>                
+                </FluentStack>
+
+                <FluentDataGrid Items="@Model.Scopes.AsQueryable()" Style="width: 100%;">
+                    <PropertyColumn Title="Scope" Property="arg => arg"></PropertyColumn>
+                    <TemplateColumn Title="Actions" Context="ScopesContext" Width="120px">
+                            <FluentButton OnClick="@(() => { })">
+                                <FluentIcon Value="@(new Icons.Regular.Size16.Edit())" Color="Color.Neutral"></FluentIcon>
+                            </FluentButton>
+                            <FluentButton>
+                                <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error"></FluentIcon>
+                            </FluentButton>
+                    </TemplateColumn>
+                </FluentDataGrid>
+                
+                <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent">Save</FluentButton>
+            </FluentStack>
+            
+        </FluentGridItem>
+        <FluentGridItem md="6">
+            <FluentStack Orientation="Orientation.Vertical">
+                <FluentLabel Weight="FontWeight.Bold">Allowed Grant Types</FluentLabel>
+                <FluentCheckbox Label="Auth Code" @bind-Value="Model.AllowAuthCode" />
+                <FluentCheckbox Label="Require Proof Key for Code Exchange" @bind-Value="Model.RequiredProofKeyForCodeExchange" Disabled="@(!Model.AllowAuthCode)" />
+                <FluentCheckbox Label="Client Credentials" @bind-Value="Model.AllowClientCredentials"/>
+                <FluentCheckbox Label="Refresh Token" @bind-Value="Model.AllowRefreshToken"/>
+
+                <FluentLabel Weight="FontWeight.Bold">Allowed Response Types</FluentLabel>
+                <FluentCheckbox Label="code" @bind-Value="Model.AllowAuthCode" ReadOnly="true"/>
+                <FluentCheckbox Label="id_token" @bind-Value="Model.AllowIdToken"/>
+                <FluentCheckbox Label="code id_token" @bind-Value="Model.AllowCodeIdToken"/>
+
+                <FluentLabel Weight="FontWeight.Bold">Allowed Open Id Connect Scopes</FluentLabel>
+                <FluentCheckbox Label="email" @bind-Value="Model.AllowEmail"/>
+                <FluentCheckbox Label="profile" @bind-Value="Model.AllowProfile"/>
+                <FluentCheckbox Label="roles" @bind-Value="Model.AllowRoles"/>
+                <FluentCheckbox Label="address" @bind-Value="Model.AllowAddress"/>
+                <FluentCheckbox Label="phone" @bind-Value="Model.AllowPhone"/>
+            </FluentStack>
+        </FluentGridItem>
+    </FluentGrid>
+</FluentEditForm>
+
+@code {
+    static readonly Option<string>[] AppTypes =
+    {
+        new() { Value = OpenIddictConstants.ApplicationTypes.Web, Text = "Web (e.g. SPAs, Server Side Web Apps, SaaS Apps, APIs)", Selected = true},
+        new() { Value = OpenIddictConstants.ApplicationTypes.Native, Text = "Native (e.g. Desktop Apps, Mobile Apps)" }
+    };
+
+    static readonly Option<string>[] ClientTypes =
+    {
+        new() { Value = OpenIddictConstants.ClientTypes.Public, Text = "Public (e.g. SPAs, Desktop Apps, Mobile Apps)", Selected = true},
+        new() { Value = OpenIddictConstants.ClientTypes.Confidential, Text = "Confidential (e.g. Server Side Web Apps, APIs)" }
+    };
+    
+    [Parameter]
+    public required InputModel Model { get; init; }
+    [Parameter]
+    public required Func<Task> OnSubmit { get; init; }
+    
+    Option<string>? _selectedAppType;
+    Option<string>? _selectedClientType;
+
+    protected override void OnInitialized()
+    {
+        _selectedAppType = AppTypes.FirstOrDefault(appType => appType.Value == Model.ApplicationType || appType.Selected);
+        _selectedClientType = AppTypes.FirstOrDefault(clientType => clientType.Value == Model.ClientType || clientType.Selected);
+    }
+    
+    async Task Submit()
+    {
+        try
+        {
+            await OnSubmit();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, ex.Message);
+            await DialogService.ShowErrorAsync(ex.Message);
+        }
+    }
+}

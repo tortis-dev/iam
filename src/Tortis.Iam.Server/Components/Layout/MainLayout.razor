@@ -13,14 +13,15 @@
         <FluentSpacer />
         <TortisProfileMenu />
     </FluentHeader>
-    <FluentStack Orientation="Orientation.Horizontal" Style="width: 100%">
+    <FluentStack Orientation="Orientation.Horizontal" Style="width: 100%; height: 100%">
         <FluentNavMenu Width="250" Collapsible="true">
             <FluentNavLink Icon="@(new Icons.Regular.Size24.Home())" Href="/" Tooltip="Home" Match="NavLinkMatch.All">Home</FluentNavLink>
             <FluentNavLink Icon="@(new Icons.Regular.Size24.Person())" Href="users" Tooltip="Users">Users</FluentNavLink>
             <FluentNavLink Icon="@(new Icons.Regular.Size24.People())" Href="roles" Tooltip="Roles">Roles</FluentNavLink>
-            <FluentNavLink Icon="@(new Icons.Regular.Size24.Apps())" Href="apps" Tooltip="Applications">Applications</FluentNavLink>
+            <FluentNavLink Icon="@(new Icons.Regular.Size24.Apps())" Href="applications" Tooltip="Applications">Applications</FluentNavLink>
+            <FluentNavLink Icon="@(new Icons.Regular.Size24.Box())" Href="resources" Tooltip="APIs">APIs</FluentNavLink>
         </FluentNavMenu>
-        <FluentBodyContent>
+        <FluentBodyContent Style="height: 100dvh">
             @Body
         </FluentBodyContent>
     </FluentStack>

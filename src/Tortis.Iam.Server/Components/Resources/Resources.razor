@@ -1,0 +1,72 @@
+@page "/resources"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@using OpenIddict.Abstractions
+@using OpenIddict.EntityFrameworkCore
+@using OpenIddict.EntityFrameworkCore.Models
+@using Tortis.Iam.Server.Data
+
+@inject IOpenIddictApplicationManager ApplicationManager;
+
+@inject NavigationManager Navigation;
+
+@attribute [Authorize]
+
+<PageTitle>API Resources</PageTitle>
+<h3>API Resources</h3>
+<p>
+    APIs are called by Applications. Resource cannot authenticate. They simply validate tokens are valid.
+</p>
+<FluentButton Appearance="Appearance.Accent" OnClick="@(() => Navigation.NavigateTo("/add-resource"))">New API Resource</FluentButton>
+<FluentDataGrid Items="_resources">
+    <PropertyColumn Property="p => p.DisplayName" Title="Name" Sortable="true" IsDefaultSortColumn="true" />
+    <PropertyColumn Property="p => p.ClientId" Title="Audience" Sortable="true" />
+    @* <TemplateColumn Title="2FA" Sortable="true"> *@
+    @*     @if(context.TwoFactorEnabled) *@
+    @*     { *@
+    @*         <FluentIcon Value="@(new Icons.Regular.Size16.Checkmark())" Color="Color.Success" /> *@
+    @*     } *@
+    @*     else *@
+    @*     { *@
+    @*         <FluentIcon Value="@(new Icons.Regular.Size16.Dismiss())" Color="Color.Error" /> *@
+    @*     } *@
+    @* </TemplateColumn> *@
+    @* <TemplateColumn Title="Locked" Sortable="true"> *@
+    @*     @if(context.AccountLocked) *@
+    @*     { *@
+    @*         <FluentIcon Value="@(new Icons.Regular.Size16.LockClosed())" Color="Color.Error" Title="Account is locked." /> *@
+    @*     } *@
+    @*     else *@
+    @*     { *@
+    @*         <FluentIcon Value="@(new Icons.Regular.Size16.LockOpen())" Color="Color.Success" Title="Account is unlocked." /> *@
+    @*     } *@
+    @* </TemplateColumn> *@
+    <TemplateColumn Title="Actions" Width="120px">
+        <FluentButton OnClick="@(() => Navigation.NavigateTo($"applications/{context.Id}"))">
+            <FluentIcon Value="@(new Icons.Regular.Size16.Edit())" Color="Color.Neutral"></FluentIcon>
+        </FluentButton>
+        <FluentButton>
+            <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error"></FluentIcon>
+        </FluentButton>
+    </TemplateColumn>
+</FluentDataGrid>
+
+@code {
+    IQueryable<OpenIddictEntityFrameworkCoreApplication<Guid>> _resources;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        var entities = ApplicationManager.ListAsync(null, null, CancellationToken.None);
+
+        List<OpenIddictEntityFrameworkCoreApplication<Guid>> resources = new();
+        await foreach (var entity in entities)
+        {
+            var resource = (OpenIddictEntityFrameworkCoreApplication<Guid>)entity;
+            if (string.IsNullOrWhiteSpace(resource.ApplicationType))
+                resources.Add(resource);
+        }
+
+        _resources = resources.AsQueryable();
+    }
+}

@@ -44,30 +44,6 @@
     </TemplateColumn>
 </FluentDataGrid>
 
-@* <button class="btn btn-primary" style="width: 10rem">Add New</button> *@
-@* *@
-@* <QuickGrid Class="table table-striped table-hover" Items="_users"> *@
-@*     <TemplateColumn Title="Username" Sortable="true" IsDefaultSortColumn="true"> *@
-@*         <div class="p-2"> *@
-@*             @context.UserName *@
-@*         </div> *@
-@*     </TemplateColumn> *@
-@*     <TemplateColumn Title="Email" Sortable="true"> *@
-@*         <div class="p-2"> *@
-@*             @context.Email *@
-@*         </div> *@
-@*     </TemplateColumn> *@
-
-@*     <TemplateColumn Title="Locked" Sortable="true"> *@
-@*         <div class="p-2"> *@
-@*             @context.AccountLocked *@
-@*         </div> *@
-@*     </TemplateColumn> *@
-@*     <TemplateColumn> *@
-@*         <button class="btn btn-outline-primary" @onclick="@(() => Navigation.NavigateTo($"/users/{context.Id}"))"><span class="bi bi-pencil"></span></button> *@
-@*     </TemplateColumn> *@
-@* </QuickGrid> *@
-
 @code {
     IQueryable<IamUser> _users;
 

@@ -24,7 +24,7 @@ public class Discovery : IClassFixture<ServerFixture>
     }
 
     [Fact]
-    public async Task SupportsClientCredentials()
+    public async Task SupportsClientCredentialsGrantType()
     {
         var responseMessage = await _server.Client.GetAsync(".well-known/openid-configuration");
 
@@ -35,7 +35,7 @@ public class Discovery : IClassFixture<ServerFixture>
     }
     
     [Fact]
-    public async Task SupportsAuthorizationCode()
+    public async Task SupportsAuthorizationCodeGrantType()
     {
         var responseMessage = await _server.Client.GetAsync(".well-known/openid-configuration");
 
@@ -46,7 +46,7 @@ public class Discovery : IClassFixture<ServerFixture>
     }
     
     [Fact]
-    public async Task SupportsRefreshToken()
+    public async Task SupportsRefreshTokenGrantType()
     {
         var responseMessage = await _server.Client.GetAsync(".well-known/openid-configuration");
 
@@ -56,15 +56,47 @@ public class Discovery : IClassFixture<ServerFixture>
         Assert.NotNull(grant);
     }
     
-    
     [Fact]
-    public async Task SupportsOfflineAccess()
+    public async Task SupportsOfflineAccessScope()
     {
         var responseMessage = await _server.Client.GetAsync(".well-known/openid-configuration");
 
         var metadata = await responseMessage.Content.ReadFromJsonAsync<JsonObject>();
         var supportedGrantTypes = metadata?["scopes_supported"]?.AsArray();
         var grant = supportedGrantTypes?.SingleOrDefault(n => n?.ToString().Equals("offline_access") ?? false);
+        Assert.NotNull(grant);
+    }
+    
+    [Fact]
+    public async Task SupportsOpenIdScope()
+    {
+        var responseMessage = await _server.Client.GetAsync(".well-known/openid-configuration");
+
+        var metadata = await responseMessage.Content.ReadFromJsonAsync<JsonObject>();
+        var supportedGrantTypes = metadata?["scopes_supported"]?.AsArray();
+        var grant = supportedGrantTypes?.SingleOrDefault(n => n?.ToString().Equals("openid") ?? false);
+        Assert.NotNull(grant);
+    }
+    
+    [Fact]
+    public async Task SupportsEmailScope()
+    {
+        var responseMessage = await _server.Client.GetAsync(".well-known/openid-configuration");
+
+        var metadata = await responseMessage.Content.ReadFromJsonAsync<JsonObject>();
+        var supportedGrantTypes = metadata?["scopes_supported"]?.AsArray();
+        var grant = supportedGrantTypes?.SingleOrDefault(n => n?.ToString().Equals("email") ?? false);
+        Assert.NotNull(grant);
+    }
+    
+    [Fact]
+    public async Task SupportsProfileScope()
+    {
+        var responseMessage = await _server.Client.GetAsync(".well-known/openid-configuration");
+
+        var metadata = await responseMessage.Content.ReadFromJsonAsync<JsonObject>();
+        var supportedGrantTypes = metadata?["scopes_supported"]?.AsArray();
+        var grant = supportedGrantTypes?.SingleOrDefault(n => n?.ToString().Equals("profile") ?? false);
         Assert.NotNull(grant);
     }
 }

@@ -1,0 +1,46 @@
+@page "/applications/{id:guid}"
+
+@using OpenIddict.Core
+@using OpenIddict.EntityFrameworkCore.Models
+
+@inject OpenIddictApplicationManager<OpenIddictEntityFrameworkCoreApplication<Guid>> ApplicationManager;
+@inject NavigationManager NavigationManager;
+
+<PageTitle>IAM: @_model.Name</PageTitle>
+<h3>Edit Application</h3>
+
+<FluentInputLabel>Client Id</FluentInputLabel>
+<FluentLabel>@_model.ClientId</FluentLabel>
+<br/>
+<ApplicationDetail  Model="@_model" OnSubmit="OnSubmit"/>
+
+@code {
+    
+    [Parameter]
+    public required Guid Id { get; init; }
+
+    InputModel _model = new();
+
+    OpenIddictEntityFrameworkCoreApplication<Guid>? _application;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _application = await ApplicationManager.FindByIdAsync(Id.ToString());
+
+        if (_application is null)
+            NavigationManager.NavigateTo("/not-found/404");
+
+        // Will never hit this if it is null, so using null forgiving operator to make the compiler happy.
+        _model = _application!.ToInputModel();
+        _model.ClientId = _application.ClientId;
+    }
+
+    async Task OnSubmit()
+    {
+        if (_application is not null)
+        {
+            var descriptor = _model.ToApplicationDescriptor();
+            await ApplicationManager.UpdateAsync(_application, descriptor);
+        }
+    }
+}
