@@ -1,2 +1,4 @@
-﻿@using Tortis.Iam.Server.Components.Account.Shared
+﻿@using Microsoft.AspNetCore.Authorization
+@using Tortis.Iam.Server.Components.Account.Shared
 @layout AccountLayout
+@attribute [AllowAnonymous]

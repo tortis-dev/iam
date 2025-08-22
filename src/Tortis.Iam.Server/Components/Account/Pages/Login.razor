@@ -3,6 +3,7 @@
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Identity
+@using Tortis.Iam.Server.Components.Users
 @using Tortis.Iam.Server.Data
 
 @inject SignInManager<IamUser> SignInManager
@@ -12,8 +13,9 @@
 
 <PageTitle>Log in</PageTitle>
 
-<FluentGrid>
-    <FluentGridItem sm="12" md="6">
+<div style="max-width: 700px">
+<FluentGrid ColumnCount="3">
+    <FluentGridItem xs="12" sm="12" md="6">
         <section>
             <h3>Login with IAM account</h3>
             <StatusMessage Message="@_errorMessage"/>
@@ -59,7 +61,7 @@
         </section>
     </FluentGridItem>
 </FluentGrid>
-
+</div>
 
 @code {
     private string? _errorMessage;
@@ -87,6 +89,9 @@
         if (result.Succeeded)
         {
             Logger.LogTrace("User logged in.");
+            // if (Input.Password.Equals("Admin1234!"))
+            //     RedirectManager.RedirectTo("/Account/Manage/ChangePassword");
+            
             RedirectManager.RedirectTo(ReturnUrl);
         }
         else if (result.RequiresTwoFactor)

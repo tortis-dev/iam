@@ -1,17 +1,9 @@
-@page "/not-found/{statusCode:int}"
+@page "/{*route:nonfile}"
+@using Microsoft.AspNetCore.Mvc
 @attribute [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 
-@using Microsoft.AspNetCore.Mvc
-
-@switch (StatusCode)
-{
-    case 404:
-        <h3>These are not the droids you're looking for.</h3>
-        break;
-}
-
+<h1>The page you are looking for does not exist.</h1>
 @code {
     [Parameter]
-    public int? StatusCode { get; set; }
-    
+    public string? Route { get; set; }
 }

@@ -10,6 +10,8 @@ namespace OpenIdConnectTests;
 public class ServerFixture : IDisposable
 {
     public HttpClient Client { get; }
+    internal WebApplicationFactory<Program>  Factory { get; }
+    
     readonly string _databaseFile;
     public ServerFixture()
     {
@@ -22,8 +24,8 @@ public class ServerFixture : IDisposable
         var db = scope.ServiceProvider.GetRequiredService<IamDbContext>();
         db.Database.EnsureCreated();
         
-        var host = new WebApplicationFactory<Program>();
-        host.WithWebHostBuilder(builder =>
+        Factory = new WebApplicationFactory<Program>();
+        Factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureServices(services =>
             {
@@ -40,7 +42,7 @@ public class ServerFixture : IDisposable
             });
         });
        
-        Client = host.CreateClient(new WebApplicationFactoryClientOptions
+        Client = Factory.CreateClient(new WebApplicationFactoryClientOptions
         {
             BaseAddress = new Uri("https://localhost/")
         });

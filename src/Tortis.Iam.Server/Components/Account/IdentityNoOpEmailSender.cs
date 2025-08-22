@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
+
+using Tortis.Iam.Server.Components.Users;
 using Tortis.Iam.Server.Data;
 
 namespace Tortis.Iam.Server.Components.Account;

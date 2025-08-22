@@ -3,10 +3,14 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using OpenIddict.EntityFrameworkCore.Models;
 
+using Tortis.Iam.Server.Components.Users;
+
 namespace Tortis.Iam.Server.Data;
 
 public class IamDbContext : IdentityDbContext<IamUser, IdentityRole<Guid>, Guid>
 {
+    public const string HistoryTableName = "am_schema_migrations_history";
+    
     public IamDbContext(DbContextOptions<IamDbContext> options) : base(options)
     { }
 
@@ -27,7 +31,14 @@ public class IamDbContext : IdentityDbContext<IamUser, IdentityRole<Guid>, Guid>
         builder.Entity<IamUser>(user =>
         {
             user.ToTable("iam_users");
+            user.Property(p => p.GivenName).HasMaxLength(100);
+            user.Property(p => p.FamilyName).HasMaxLength(100);
+            user.Property(p => p.CreatedOn);
+            user.Property(p => p.CreatedBy).HasMaxLength(36);
+            user.Property(p => p.ModifiedOn);
+            user.Property(p => p.ModifiedBy).HasMaxLength(36);
             user.Ignore(p => p.AccountLocked);
+            user.Ignore(p => p.Name);
             user.HasIndex(p => p.NormalizedEmail).HasDatabaseName("ix_iam_users_email");
             user.HasIndex(p => p.NormalizedUserName).HasDatabaseName("ix_iam_users_username");
         });

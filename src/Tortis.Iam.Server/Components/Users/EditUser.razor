@@ -1,8 +1,78 @@
 @page "/users/{userId:guid}"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Tortis.Iam.Server.Data
+
+@inject UserManager<IamUser> UserManager;
 
 <h3>Edit User</h3>
-
+<FluentEditForm Model="@Model">
+  <FluentStack Orientation="Orientation.Vertical">
+    <FluentTextField @bind-Value="@Model.Username" Label="Username" ReadOnly="true"/>
+    <FluentTextField @bind-Value="@Model.Email" Label="Email">
+      @if (!string.IsNullOrWhiteSpace(Model.Email))
+      {
+        if (Model.EmailConfirmed)
+        {
+          <FluentIcon Value="@(new Icons.Regular.Size16.Checkmark())" Color="Color.Success" Slot="end" Title="Email Confirmed"/>
+        }
+        else
+        {
+          <FluentIcon Value="@(new Icons.Regular.Size16.Warning())" Color="Color.Warning" Slot="end" Title="Email Not Confirmed"/>
+        }
+      }
+    </FluentTextField>
+    <FluentTextField @bind-Value="@Model.PhoneNumber" Label="Phone Number" TextFieldType="TextFieldType.Tel">
+      @if (!string.IsNullOrWhiteSpace(Model.PhoneNumber))
+      {
+        if (Model.PhoneNumberConfirmed)
+        {
+          <FluentIcon Value="@(new Icons.Regular.Size16.Checkmark())" Color="Color.Success" Slot="end" Title="Phone Number Confirmed"/>
+        }
+        else
+        {
+          <FluentIcon Value="@(new Icons.Regular.Size16.Warning())" Color="Color.Warning" Slot="end" Title="Phone Number Not Confirmed"/>
+        }
+      }
+    </FluentTextField>
+    <FluentSwitch @bind-Value="@Model.TwoFactorEnabled" Label="Enable Two Factor Authentication"/>
+    <FluentSwitch @bind-Value="@Model.AccountLocked" Label="Account Locked"/>
+  </FluentStack>
+</FluentEditForm>
 @code {
     [Parameter]
     public Guid UserId { get; set; }
+
+    InputModel Model { get; set; }
+
+    private class InputModel
+    {
+        public required string Username { get; set; }
+        public string? Email { get; set; }
+        public bool EmailConfirmed { get; set; }
+        public bool TwoFactorEnabled { get; set; }
+        public bool AccountLocked { get; set; }
+        public string? PhoneNumber { get; set; }
+        public bool PhoneNumberConfirmed { get; set; }
+    }
+    
+    protected override async Task OnInitializedAsync()
+    {
+      var user = await UserManager.FindByIdAsync(UserId.ToString());
+      if (user is null)
+        return; //TODO: handle this.
+
+      Model = new InputModel
+      {
+        Username = user.UserName ?? string.Empty, //should never be null, but you never know.
+        Email = user.Email,
+        EmailConfirmed = user.EmailConfirmed,
+        TwoFactorEnabled = user.TwoFactorEnabled,
+        AccountLocked = user.AccountLocked,
+        PhoneNumber = user.PhoneNumber,
+        PhoneNumberConfirmed = user.PhoneNumberConfirmed
+      };
+    }
+
 }

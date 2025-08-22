@@ -1,27 +1,24 @@
 ﻿# Tortis IAM
 
-Licensed under Apache-2 and GPL-3.
-
-This project aims to be a FOSS replacement for Duende Identity Server as well as a fully functional, customizable, 
-IAM solution.
+This project aims to be a FOSS IAM solution.
 
 ## Features
 
 - [ ] OpenIdConnect/OAuth2.0 Flows/Grant Types
-  - [ ] Client Credentials
-  - [ ] Authorization Code + PKCE
+  - [x] Client Credentials
+  - [x] Authorization Code + PKCE
   - [ ] Password
   - [ ] Implicit
-  - [ ] Hybrid
+  - [x] Hybrid
   - [ ] Delegation/On-Behalf-Of (https://datatracker.ietf.org/doc/html/rfc8693)
-- [ ] Scopes
-- [ ] Local logins/users
-  - [ ] MFA
+- [x] Scopes
+- [x] Local logins/users
+  - [x] MFA
 - [ ] External logins and SSO
   - [ ] LDAP
-  - [ ] OpenIdConnect Federation
+  - [x] OpenIdConnect Federation
   - [ ] SAML Federation
-- [ ] Roles/RBAC
+- [x] Roles/RBAC
 - [ ] Financial API Baseline compliant (maybe certified) (https://openid.net/wg/fapi/)
 
 ## Database Support
@@ -49,13 +46,13 @@ are abstracted from the IAM solution itself.
 
 ## Certification
 
-I would like to get the solution OpenId Connect certified. 
+I would like to get the solution OpenId Connect certified and Financial API. 
 
 ## Delivery
 
 Considering delivering as a container as well as a nuget package(s) consumers can pull into their own applications.
 
-## Trusted Servershttps://datatracker.ietf.org/doc/html/rfc8693
+## Trusted Servers (https://datatracker.ietf.org/doc/html/rfc8693)
 
 To perform on-behalf-of where the user's token comes from a different issuer, Tortis IAM must first trust the issuer.
 
@@ -70,3 +67,12 @@ Okta has a similar concept.
 - https://developer.okta.com/docs/guides/set-up-token-exchange/main/#trusted-servers
 
 This mechanism could also be used to configure Federation?
+
+## License
+
+The complete application is licensed under GPL-3. Libraries delivered for devs to create their own IAM solution are
+licensed under Apache-2.
+
+OpenIDDict is licensed under Apache-2 (https://github.com/openiddict/openiddict-core/blob/dev/LICENSE.md)
+
+AspNet Core Identity is licensed under MIT (https://github.com/dotnet/aspnetcore/blob/main/LICENSE.txt)

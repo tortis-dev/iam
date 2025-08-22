@@ -4,7 +4,7 @@ using OpenIddict.EntityFrameworkCore.Models;
 
 namespace Tortis.Iam.Server.Components.Applications;
 
-public class InputModel
+public class ApplicationViewModel
 {
     [Required]
     public string Name { get; set; }
@@ -35,9 +35,14 @@ public class InputModel
 
 static class MappingExtensions
 {
-    public static InputModel ToInputModel(this OpenIddictEntityFrameworkCoreApplication<Guid> application)
+    /// <summary>
+    /// Maps an OpenIddict application to a view model.
+    /// </summary>
+    /// <param name="application"></param>
+    /// <returns></returns>
+    public static ApplicationViewModel ToViewModel(this OpenIddictEntityFrameworkCoreApplication<Guid> application)
     {
-        var model = new InputModel();
+        var model = new ApplicationViewModel();
                
         model.Name = application.DisplayName ?? string.Empty;
         model.ApplicationType = application.ApplicationType ?? string.Empty;
@@ -61,40 +66,51 @@ static class MappingExtensions
         return model;
     }
 
-    public static OpenIddictApplicationDescriptor ToApplicationDescriptor(this InputModel inputModel)
+    /// <summary>
+    /// Maps an application view model to an OpenIddict application.
+    /// </summary>
+    /// <param name="applicationViewModel"></param>
+    /// <returns></returns>
+    public static OpenIddictApplicationDescriptor ToApplicationDescriptor(this ApplicationViewModel applicationViewModel)
     {
         var app = new OpenIddictApplicationDescriptor()
         {
-            ClientId = inputModel.ClientId,
-            DisplayName = inputModel.Name,
-            ApplicationType = inputModel.ApplicationType,
-            ClientType = inputModel.ClientType,
+            ClientId = applicationViewModel.ClientId,
+            DisplayName = applicationViewModel.Name,
+            ApplicationType = applicationViewModel.ApplicationType,
+            ClientType = applicationViewModel.ClientType,
         };
 
-        if (!string.IsNullOrWhiteSpace(inputModel.ClientSecret) && inputModel.ClientType == OpenIddictConstants.ClientTypes.Confidential)
-            app.ClientSecret = inputModel.ClientSecret;
+        if (!string.IsNullOrWhiteSpace(applicationViewModel.ClientSecret) && applicationViewModel.ClientType == OpenIddictConstants.ClientTypes.Confidential)
+            app.ClientSecret = applicationViewModel.ClientSecret;
         
-        if (!string.IsNullOrWhiteSpace(inputModel.RedirectUris))
+        if (!string.IsNullOrWhiteSpace(applicationViewModel.RedirectUris))
         {
-            foreach (var uri in inputModel.RedirectUris.Split(","))
+            foreach (var uri in applicationViewModel.RedirectUris.Split(","))
                 app.RedirectUris.Add(new Uri(uri.Trim()));
         }
 
-        if (inputModel.AllowAuthCode) app.Permissions.Add(OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode);
-        if (inputModel.AllowClientCredentials) app.Permissions.Add(OpenIddictConstants.Permissions.GrantTypes.ClientCredentials);
-        if (inputModel.AllowRefreshToken) app.Permissions.Add(OpenIddictConstants.Permissions.GrantTypes.RefreshToken);
+        app.Permissions.Add(OpenIddictConstants.Permissions.Endpoints.Token);
+        
+        if (applicationViewModel.AllowAuthCode)
+        {
+            app.Permissions.Add(OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode);
+            app.Permissions.Add(OpenIddictConstants.Permissions.Endpoints.Authorization);
+        }
+        if (applicationViewModel.AllowClientCredentials) app.Permissions.Add(OpenIddictConstants.Permissions.GrantTypes.ClientCredentials);
+        if (applicationViewModel.AllowRefreshToken) app.Permissions.Add(OpenIddictConstants.Permissions.GrantTypes.RefreshToken);
 
-        if (inputModel.AllowEmail) app.Permissions.Add(OpenIddictConstants.Permissions.Scopes.Email);
-        if (inputModel.AllowAddress) app.Permissions.Add(OpenIddictConstants.Permissions.Scopes.Address);
-        if (inputModel.AllowPhone) app.Permissions.Add(OpenIddictConstants.Permissions.Scopes.Phone);
-        if (inputModel.AllowProfile) app.Permissions.Add(OpenIddictConstants.Permissions.Scopes.Profile);
-        if (inputModel.AllowRoles) app.Permissions.Add(OpenIddictConstants.Permissions.Scopes.Roles);
+        if (applicationViewModel.AllowEmail) app.Permissions.Add(OpenIddictConstants.Permissions.Scopes.Email);
+        if (applicationViewModel.AllowAddress) app.Permissions.Add(OpenIddictConstants.Permissions.Scopes.Address);
+        if (applicationViewModel.AllowPhone) app.Permissions.Add(OpenIddictConstants.Permissions.Scopes.Phone);
+        if (applicationViewModel.AllowProfile) app.Permissions.Add(OpenIddictConstants.Permissions.Scopes.Profile);
+        if (applicationViewModel.AllowRoles) app.Permissions.Add(OpenIddictConstants.Permissions.Scopes.Roles);
 
-        if (inputModel.AllowCode) app.Permissions.Add(OpenIddictConstants.Permissions.ResponseTypes.Code);
-        if (inputModel.AllowIdToken) app.Permissions.Add(OpenIddictConstants.Permissions.ResponseTypes.IdToken);
-        if (inputModel.AllowCodeIdToken) app.Permissions.Add(OpenIddictConstants.Permissions.ResponseTypes.CodeIdToken);
+        if (applicationViewModel.AllowCode) app.Permissions.Add(OpenIddictConstants.Permissions.ResponseTypes.Code);
+        if (applicationViewModel.AllowIdToken) app.Permissions.Add(OpenIddictConstants.Permissions.ResponseTypes.IdToken);
+        if (applicationViewModel.AllowCodeIdToken) app.Permissions.Add(OpenIddictConstants.Permissions.ResponseTypes.CodeIdToken);
 
-        if (inputModel is { AllowAuthCode: true, RequiredProofKeyForCodeExchange: true })
+        if (applicationViewModel is { AllowAuthCode: true, RequiredProofKeyForCodeExchange: true })
             app.Requirements.Add(OpenIddictConstants.Requirements.Features.ProofKeyForCodeExchange);
 
         return app;

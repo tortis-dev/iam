@@ -1,5 +1,6 @@
 @page "/applications/{id:guid}"
 
+@using System.Security.Cryptography
 @using OpenIddict.Core
 @using OpenIddict.EntityFrameworkCore.Models
 
@@ -9,17 +10,19 @@
 <PageTitle>IAM: @_model.Name</PageTitle>
 <h3>Edit Application</h3>
 
-<FluentInputLabel>Client Id</FluentInputLabel>
-<FluentLabel>@_model.ClientId</FluentLabel>
-<br/>
-<ApplicationDetail  Model="@_model" OnSubmit="OnSubmit"/>
-
+<FluentStack Orientation="Orientation.Vertical" >
+  <FluentInputLabel>Client Id</FluentInputLabel>
+  <FluentLabel>@_model.ClientId</FluentLabel>
+  <FluentInputLabel>Client Secret</FluentInputLabel>
+  <FluentLabel>@_model.ClientSecret</FluentLabel>
+  <ApplicationDetail Model="@_model" OnSubmit="OnSubmit" />
+</FluentStack>
 @code {
     
     [Parameter]
     public required Guid Id { get; init; }
 
-    InputModel _model = new();
+    ApplicationViewModel _model = new();
 
     OpenIddictEntityFrameworkCoreApplication<Guid>? _application;
 
@@ -31,7 +34,7 @@
             NavigationManager.NavigateTo("/not-found/404");
 
         // Will never hit this if it is null, so using null forgiving operator to make the compiler happy.
-        _model = _application!.ToInputModel();
+        _model = _application!.ToViewModel();
         _model.ClientId = _application.ClientId;
     }
 
@@ -40,6 +43,12 @@
         if (_application is not null)
         {
             var descriptor = _model.ToApplicationDescriptor();
+            if (_model.AllowClientCredentials && string.IsNullOrWhiteSpace(_model.ClientSecret))
+            {
+              var hmac = new HMACSHA256();
+              descriptor.ClientSecret = Convert.ToBase64String(hmac.Key);
+            }
+            
             await ApplicationManager.UpdateAsync(_application, descriptor);
         }
     }

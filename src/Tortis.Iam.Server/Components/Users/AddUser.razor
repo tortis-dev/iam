@@ -1,13 +1,16 @@
 @page "/add-user"
 
 @using System.ComponentModel.DataAnnotations
+@using System.Security.Claims
 @using System.Text.Encodings.Web
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Identity
 @using Tortis.Iam.Server.Data
 
 @inject UserManager<IamUser> UserManager
 @inject IEmailSender<IamUser> EmailSender
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <h3>Add User</h3>
 
@@ -15,6 +18,7 @@
     <DataAnnotationsValidator/>
     <FluentTextField @bind-Value="Model.Email" Label="Email Address"></FluentTextField>
     <FluentValidationMessage For="() => Model.Email"></FluentValidationMessage>
+    <FluentTextField @bind-Value="Model.PhoneNumber" Label="Phone Number"></FluentTextField>
     <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent">Save</FluentButton>
 </FluentEditForm>
 
@@ -24,6 +28,7 @@
     {
         [Required, EmailAddress]
         public string Email { get; set; }
+        public string? PhoneNumber { get; set; }
     };
     
     InputModel Model { get; } = new();
@@ -32,12 +37,14 @@
     {
         var user = new IamUser
         {
+            Id = Ulid.NewUlid().ToGuid(),
             UserName = Model.Email,
-            Email = Model.Email
+            Email = Model.Email,
+            PhoneNumber = Model.PhoneNumber,
+            CreatedOn = DateTimeOffset.Now,
+            CreatedBy = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User.FindFirstValue(ClaimTypes.NameIdentifier)!
         };
-
         
-       
         var result = await UserManager.CreateAsync(user, PasswordGenerator.Generate(32));
         
         if (!result.Succeeded)

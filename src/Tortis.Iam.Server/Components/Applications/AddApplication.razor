@@ -7,16 +7,16 @@
 
 <h3>Add Application</h3>
 
-<ApplicationDetail Model="_inputModel" OnSubmit="OnSubmit" />
+<ApplicationDetail Model="_applicationViewModel" OnSubmit="OnSubmit" />
 
 @code {
-    InputModel _inputModel = new();
+    ApplicationViewModel _applicationViewModel = new();
 
     async Task OnSubmit()
     {
-        var app = _inputModel.ToApplicationDescriptor();
+        var app = _applicationViewModel.ToApplicationDescriptor();
         app.ClientId = Guid.NewGuid().ToString();
-        app.ClientSecret = _inputModel.ClientType.Equals(OpenIddictConstants.ClientTypes.Confidential) ? Guid.NewGuid().ToString() : null;
+        app.ClientSecret = string.Equals(_applicationViewModel.ClientType, OpenIddictConstants.ClientTypes.Confidential) ? Guid.NewGuid().ToString() : null;
         
         await ApplicationManager.CreateAsync(app);
         NavigationManager.NavigateTo("/applications");

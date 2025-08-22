@@ -50,11 +50,11 @@ public class AuthorizeEndpointController : ControllerBase
 
         // HACK: This should never be null. Do we want to handle it better?
         var nameClaimValue = authenticationResult.Principal!.Identity!.Name ?? Guid.NewGuid().ToString();
-        
+        var identifier = authenticationResult.Principal.FindFirstValue(ClaimTypes.NameIdentifier) ?? nameClaimValue;
         // Create a new claims principal
         var claims = new List<Claim>
-        {
-            new(OpenIddictConstants.Claims.Subject, nameClaimValue),
+        {                                                                               
+            new(OpenIddictConstants.Claims.Subject, identifier),
             new(OpenIddictConstants.Claims.Name, nameClaimValue)
         };
 

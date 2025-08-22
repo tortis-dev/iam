@@ -1,38 +1,50 @@
 using Microsoft.AspNetCore.Identity;
 using OpenIddict.Abstractions;
 
+using Tortis.Iam.Server.Components.Users;
+
 namespace Tortis.Iam.Server.Data;
 
 sealed class SetupDefaultAdmin : BackgroundService
 {
     readonly IServiceProvider _container;
     readonly ILogger<SetupDefaultAdmin> _logger;
+    private readonly IHostEnvironment _env;
 
-    public SetupDefaultAdmin(IServiceProvider container, ILogger<SetupDefaultAdmin> logger)
+    public SetupDefaultAdmin(IServiceProvider container, ILogger<SetupDefaultAdmin> logger, IHostEnvironment env)
     {
         _container = container;
         _logger = logger;
+        _env = env;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-
         await using var scope = _container.CreateAsyncScope();
-
+        
+        await scope.ServiceProvider.GetRequiredService<IamDbContext>().Database.EnsureCreatedAsync(stoppingToken);
+        
         try
         {
             await CreateAdministratorRoleAsync(scope.ServiceProvider);
             await CreateAdminUserAsync(scope.ServiceProvider, stoppingToken);
-            await CreateTestResourceAsync(scope.ServiceProvider, stoppingToken);
-            await CreateTestClientAsync(scope.ServiceProvider, stoppingToken);
+
+            if (_env.IsDevelopment())
+            {
+                await CreateTestResourceAsync(scope.ServiceProvider, stoppingToken);
+                await CreateTestClientAsync(scope.ServiceProvider, stoppingToken);
+            }
         }
         catch (Exception ex)
         {
-            // We don't want to crash the microservice, but we do want to log a critical message.
+            // We don't want to crash the application, but we do want to log a critical message.
             // A generic exception is being caught here because database errors are raised as their respective
             // platform exception--e.g. Microsoft.Data.SqlClient.SqlException.
             
-            _logger.LogCritical(ex, "An exception occurred while setting up the default administrator account.");
+            _logger.LogCritical(ex, 
+                "An exception occurred while setting up the default administrator account. " +
+                "Tortis IAM will continue to run, but you may not be able to log in as the default administrator. " +
+                "Please ensure that the database is available and that the connection string is correct.");
         }
     }
 
@@ -57,8 +69,11 @@ sealed class SetupDefaultAdmin : BackgroundService
         {
             admin = new IamUser
             {
+                Id = Ulid.NewUlid().ToGuid(),
                 UserName = username,
-                EmailConfirmed = true
+                EmailConfirmed = true,
+                CreatedOn = DateTimeOffset.Now,
+                CreatedBy = "Installer"
             };
             
             var result = await userManager.CreateAsync(admin, defaultPassword);

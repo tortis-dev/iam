@@ -18,7 +18,6 @@
                               Items="@AppTypes"
                               OptionValue="@(type => type.Value)"
                               OptionText="@(type => type.Text)"
-                              OptionSelected="@(type => type.Selected)"
                               @bind-SelectedOption="@(_selectedAppType)"
                               @bind-Value="Model.ApplicationType"
                               Width="100%" />
@@ -26,7 +25,6 @@
                               Items="@ClientTypes"
                               OptionValue="@(type => type.Value)"
                               OptionText="@(type => type.Text)"
-                              OptionSelected="@(type => type.Selected)"
                               @bind-SelectedOption="@(_selectedClientType)"
                               @bind-Value="Model.ClientType"
                               Width="100%" />
@@ -82,18 +80,18 @@
 @code {
     static readonly Option<string>[] AppTypes =
     {
-        new() { Value = OpenIddictConstants.ApplicationTypes.Web, Text = "Web (e.g. SPAs, Server Side Web Apps, SaaS Apps, APIs)", Selected = true},
+        new() { Value = OpenIddictConstants.ApplicationTypes.Web, Text = "Web (e.g. SPAs, Server Side Web Apps, SaaS Apps, APIs)"},
         new() { Value = OpenIddictConstants.ApplicationTypes.Native, Text = "Native (e.g. Desktop Apps, Mobile Apps)" }
     };
 
     static readonly Option<string>[] ClientTypes =
     {
-        new() { Value = OpenIddictConstants.ClientTypes.Public, Text = "Public (e.g. SPAs, Desktop Apps, Mobile Apps)", Selected = true},
+        new() { Value = OpenIddictConstants.ClientTypes.Public, Text = "Public (e.g. SPAs, Desktop Apps, Mobile Apps)"},
         new() { Value = OpenIddictConstants.ClientTypes.Confidential, Text = "Confidential (e.g. Server Side Web Apps, APIs)" }
     };
     
     [Parameter]
-    public required InputModel Model { get; init; }
+    public required ApplicationViewModel Model { get; init; }
     [Parameter]
     public required Func<Task> OnSubmit { get; init; }
     
@@ -102,8 +100,8 @@
 
     protected override void OnInitialized()
     {
-        _selectedAppType = AppTypes.FirstOrDefault(appType => appType.Value == Model.ApplicationType || appType.Selected);
-        _selectedClientType = AppTypes.FirstOrDefault(clientType => clientType.Value == Model.ClientType || clientType.Selected);
+        _selectedAppType = AppTypes.FirstOrDefault(appType => appType.Value == Model.ApplicationType) ?? AppTypes[0];
+        _selectedClientType = ClientTypes.FirstOrDefault(clientType => clientType.Value == Model.ClientType) ?? ClientTypes[0];
     }
     
     async Task Submit()

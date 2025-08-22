@@ -1,7 +1,9 @@
 ﻿@page "/Account/LoginWith2fa"
+@layout LoginLayout
 
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Identity
+@using Tortis.Iam.Server.Components.Users
 @using Tortis.Iam.Server.Data
 
 @inject SignInManager<IamUser> SignInManager

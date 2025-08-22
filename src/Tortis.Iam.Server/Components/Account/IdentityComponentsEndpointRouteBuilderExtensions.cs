@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
 using Tortis.Iam.Server.Components.Account.Pages;
 using Tortis.Iam.Server.Components.Account.Pages.Manage;
+using Tortis.Iam.Server.Components.Users;
 using Tortis.Iam.Server.Data;
 
 namespace Microsoft.AspNetCore.Routing;
