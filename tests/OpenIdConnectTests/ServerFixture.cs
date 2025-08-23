@@ -16,13 +16,13 @@ public class ServerFixture : IDisposable
     public ServerFixture()
     {
         _databaseFile = $"{Guid.NewGuid()}.db";
-        var container = new ServiceCollection()
-            .AddDbContext<IamDbContext>(options => options.UseSqlite($"Filename={_databaseFile}"))
-            .BuildServiceProvider();
-        
-        using var scope = container.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<IamDbContext>();
-        db.Database.EnsureCreated();
+        // var container = new ServiceCollection()
+        //     .AddDbContext<IamDbContext>(options => options.UseSqlite($"Filename={_databaseFile}"))
+        //     .BuildServiceProvider();
+        //
+        // using var scope = container.CreateScope();
+        // var db = scope.ServiceProvider.GetRequiredService<IamDbContext>();
+        // db.Database.EnsureCreated();
         
         Factory = new WebApplicationFactory<Program>();
         Factory.WithWebHostBuilder(builder =>

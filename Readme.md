@@ -76,3 +76,4 @@ licensed under Apache-2.
 OpenIDDict is licensed under Apache-2 (https://github.com/openiddict/openiddict-core/blob/dev/LICENSE.md)
 
 AspNet Core Identity is licensed under MIT (https://github.com/dotnet/aspnetcore/blob/main/LICENSE.txt)
+

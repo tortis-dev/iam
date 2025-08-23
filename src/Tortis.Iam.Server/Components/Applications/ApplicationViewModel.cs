@@ -40,7 +40,7 @@ static class MappingExtensions
     /// </summary>
     /// <param name="application"></param>
     /// <returns></returns>
-    public static ApplicationViewModel ToViewModel(this OpenIddictEntityFrameworkCoreApplication<Guid> application)
+    public static ApplicationViewModel ToViewModel(this OpenIddictApplicationDescriptor application)
     {
         var model = new ApplicationViewModel();
                

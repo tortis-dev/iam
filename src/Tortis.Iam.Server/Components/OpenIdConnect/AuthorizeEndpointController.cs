@@ -25,8 +25,8 @@ public class AuthorizeEndpointController : ControllerBase
     /// https://openid.net/specs/openid-connect-core-1_0.html#AuthorizationEndpoint
     /// https://www.rfc-editor.org/rfc/rfc6749.html#section-3.1
     /// </summary>
-    [HttpGet("connect/authorize")]
-    [HttpPost("connect/authorize")]
+    [HttpGet(TortisOpenIdConstants.AUTHORIZATION_ENDPOINT)]
+    [HttpPost(TortisOpenIdConstants.AUTHORIZATION_ENDPOINT)]
     [IgnoreAntiforgeryToken]
     public async Task<IActionResult> Authorize()
     {

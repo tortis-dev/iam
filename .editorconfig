@@ -7,13 +7,16 @@ indent_size = 4
 tab_width = 4
 
 # Markup files
-[*.{html,cshtml,xml,json,yml,yaml,proj,csproj,sqlproj}]
+[*.{html,xml,json,yml,yaml,proj,csproj,sqlproj}]
 indent_size = 2
 
 # C# files
 [*.cs]
 
-file_header_template = "Licensed under GPL-3."
+file_header_template = Licensed under GPL-3 (https://www.gnu.org/licenses/gpl-3.0.en.html)
+
+[*.razor]
+file_header_template = Licensed under GPL-3 (https://www.gnu.org/licenses/gpl-3.0.en.html)
 
 #### Core EditorConfig Options ####
 
@@ -237,21 +240,21 @@ dotnet_naming_rule.private_static_fields_should_be_s_camelcase.severity = sugges
 dotnet_naming_rule.private_static_fields_should_be_s_camelcase.symbols = private_static_fields
 dotnet_naming_rule.private_static_fields_should_be_s_camelcase.style = s_camelcase
 
-dotnet_naming_rule.public_constant_fields_should_be_pascalcase.severity = suggestion
-dotnet_naming_rule.public_constant_fields_should_be_pascalcase.symbols = public_constant_fields
-dotnet_naming_rule.public_constant_fields_should_be_pascalcase.style = pascalcase
+dotnet_naming_rule.public_constant_fields_should_be_all_caps.severity = suggestion
+dotnet_naming_rule.public_constant_fields_should_be_all_caps.symbols = public_constant_fields
+dotnet_naming_rule.public_constant_fields_should_be_all_caps.style = allupper
 
-dotnet_naming_rule.private_constant_fields_should_be_pascalcase.severity = suggestion
-dotnet_naming_rule.private_constant_fields_should_be_pascalcase.symbols = private_constant_fields
-dotnet_naming_rule.private_constant_fields_should_be_pascalcase.style = pascalcase
+dotnet_naming_rule.private_constant_fields_should_be_all_caps.severity = suggestion
+dotnet_naming_rule.private_constant_fields_should_be_all_caps.symbols = private_constant_fields
+dotnet_naming_rule.private_constant_fields_should_be_all_caps.style = allupper
 
-dotnet_naming_rule.public_static_readonly_fields_should_be_pascalcase.severity = suggestion
-dotnet_naming_rule.public_static_readonly_fields_should_be_pascalcase.symbols = public_static_readonly_fields
-dotnet_naming_rule.public_static_readonly_fields_should_be_pascalcase.style = pascalcase
+dotnet_naming_rule.public_static_readonly_fields_should_be_all_caps.severity = suggestion
+dotnet_naming_rule.public_static_readonly_fields_should_be_all_caps.symbols = public_static_readonly_fields
+dotnet_naming_rule.public_static_readonly_fields_should_be_all_caps.style = allupper
 
 dotnet_naming_rule.private_static_readonly_fields_should_be_pascalcase.severity = suggestion
 dotnet_naming_rule.private_static_readonly_fields_should_be_pascalcase.symbols = private_static_readonly_fields
-dotnet_naming_rule.private_static_readonly_fields_should_be_pascalcase.style = pascalcase
+dotnet_naming_rule.private_static_readonly_fields_should_be_pascalcase.style = allupper
 
 dotnet_naming_rule.enums_should_be_pascalcase.severity = suggestion
 dotnet_naming_rule.enums_should_be_pascalcase.symbols = enums
@@ -374,6 +377,9 @@ dotnet_naming_style.s_camelcase.required_prefix = s_
 dotnet_naming_style.s_camelcase.required_suffix = 
 dotnet_naming_style.s_camelcase.word_separator = 
 dotnet_naming_style.s_camelcase.capitalization = camel_case
+
+dotnet_naming_style.allupper.capitalization = all_upper
+dotnet_naming_style.allupper.word_separator = _
 
 [*.sql]
 # Indentation and spacing

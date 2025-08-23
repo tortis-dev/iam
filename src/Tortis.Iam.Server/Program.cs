@@ -8,6 +8,7 @@ using Quartz;
 using Tortis.Iam.Server;
 using Tortis.Iam.Server.Components;
 using Tortis.Iam.Server.Components.Account;
+using Tortis.Iam.Server.Components.Applications;
 using Tortis.Iam.Server.Components.OpenIdConnect;
 using Tortis.Iam.Server.Components.Users;
 using Tortis.Iam.Server.Data;
@@ -17,7 +18,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Configure Kestrel
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.AddServerHeader = false; // Remove the default "Server" header so attackers can't identify the server as Kestrel.'
+    options.AddServerHeader = false; // Remove the default "Server" header so attackers can't identify the server as Kestrel.
     options.ConfigureEndpointDefaults(endpoint => endpoint.UseHttps());
 });
 
@@ -82,7 +83,9 @@ builder.Services.AddQuartz(options =>
 }).AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
 
 // OIDC
-builder.Services.AddOpenIddict()
+builder.Services
+    .AddScoped<IOpenIddictApplicationManager, IamApplicationManager>()
+    .AddOpenIddict()
     .AddCore(options =>
     {
         options
@@ -96,10 +99,10 @@ builder.Services.AddOpenIddict()
         var settings = builder.Configuration.GetSection("OpenIdConnect").Get<OpenIdConnectSettings>() ?? new OpenIdConnectSettings();
         builder.Services.AddSingleton(settings);
         
-        options.SetTokenEndpointUris("connect/token");
-        options.SetAuthorizationEndpointUris("connect/authorize");
         options.SetConfigurationEndpointUris(".well-known/openid-configuration");
-        options.SetUserInfoEndpointUris("connect/userinfo");
+        options.SetTokenEndpointUris(TortisOpenIdConstants.TOKEN_ENDPOINT);
+        options.SetAuthorizationEndpointUris(TortisOpenIdConstants.AUTHORIZATION_ENDPOINT);
+        options.SetUserInfoEndpointUris(TortisOpenIdConstants.USERINFO_ENDPOINT);
         
         if (settings.EnableClientCredentialsFlow) options.AllowClientCredentialsFlow();
         if (settings.EnableAuthorizationCodeFlow) options.AllowAuthorizationCodeFlow();

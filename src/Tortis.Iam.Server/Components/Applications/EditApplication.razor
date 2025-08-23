@@ -1,10 +1,9 @@
 @page "/applications/{id:guid}"
 
 @using System.Security.Cryptography
-@using OpenIddict.Core
-@using OpenIddict.EntityFrameworkCore.Models
+@using OpenIddict.Abstractions
 
-@inject OpenIddictApplicationManager<OpenIddictEntityFrameworkCoreApplication<Guid>> ApplicationManager;
+@inject IOpenIddictApplicationManager ApplicationManager;
 @inject NavigationManager NavigationManager;
 
 <PageTitle>IAM: @_model.Name</PageTitle>
@@ -24,32 +23,30 @@
 
     ApplicationViewModel _model = new();
 
-    OpenIddictEntityFrameworkCoreApplication<Guid>? _application;
+    OpenIddictApplicationDescriptor _application = new();
 
     protected override async Task OnInitializedAsync()
     {
-        _application = await ApplicationManager.FindByIdAsync(Id.ToString());
+        var app = await ApplicationManager.FindByIdAsync(Id.ToString());
 
-        if (_application is null)
+        if (app is null)
             NavigationManager.NavigateTo("/not-found/404");
 
+        await ApplicationManager.PopulateAsync(_application, app!);
         // Will never hit this if it is null, so using null forgiving operator to make the compiler happy.
-        _model = _application!.ToViewModel();
-        _model.ClientId = _application.ClientId;
+        _model = _application.ToViewModel();
     }
 
     async Task OnSubmit()
     {
-        if (_application is not null)
+        var descriptor = _model.ToApplicationDescriptor();
+        if (_model.AllowClientCredentials && string.IsNullOrWhiteSpace(_model.ClientSecret))
         {
-            var descriptor = _model.ToApplicationDescriptor();
-            if (_model.AllowClientCredentials && string.IsNullOrWhiteSpace(_model.ClientSecret))
-            {
-              var hmac = new HMACSHA256();
-              descriptor.ClientSecret = Convert.ToBase64String(hmac.Key);
-            }
-            
-            await ApplicationManager.UpdateAsync(_application, descriptor);
+          var hmac = new HMACSHA256();
+          descriptor.ClientSecret = Convert.ToBase64String(hmac.Key);
         }
+        
+        var app = await ApplicationManager.FindByIdAsync(Id.ToString());
+        await ApplicationManager.UpdateAsync(app, descriptor);
     }
 }

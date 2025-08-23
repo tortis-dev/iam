@@ -17,7 +17,7 @@ public class TokenEndpointController : ControllerBase
     /// https://openid.net/specs/openid-connect-core-1_0.html#TokenEndpoint
     /// https://www.rfc-editor.org/rfc/rfc6749.html#section-3.2
     /// </summary>
-    [HttpPost("connect/token")]
+    [HttpPost(TortisOpenIdConstants.TOKEN_ENDPOINT)]
     public async Task<IActionResult> Token()
     {
         // Note:

@@ -1,8 +1,5 @@
 // "Licensed under GPL-3."
 
-using System.Security.Claims;
-
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +8,6 @@ using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 
 using Tortis.Iam.Server.Components.Users;
-using Tortis.Iam.Server.Data;
 
 namespace Tortis.Iam.Server.Components.OpenIdConnect;
 
@@ -26,7 +22,7 @@ public class UserInfoController : ControllerBase
         _userManager = userManager;
     }
 
-    [HttpGet("connect/userinfo")]
+    [HttpGet(TortisOpenIdConstants.USERINFO_ENDPOINT)]
     public async Task<IActionResult> UserInfo()
     {
         var user = await _userManager.FindByNameAsync(User.Identity!.Name!);
@@ -40,7 +36,8 @@ public class UserInfoController : ControllerBase
             email = user?.Email,
             email_verified = user?.EmailConfirmed,
             phone_number = user?.PhoneNumber,
-            phone_number_verified = user?.PhoneNumberConfirmed
+            phone_number_verified = user?.PhoneNumberConfirmed,
+            updated_at = user?.ModifiedOn?.ToUnixTimeSeconds() ?? user?.CreatedOn.ToUnixTimeSeconds()
         });
     }
 }

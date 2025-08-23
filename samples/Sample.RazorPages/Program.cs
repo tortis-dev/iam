@@ -13,7 +13,10 @@ IdentityModelEventSource.ShowPII = builder.Environment.IsDevelopment();
 
 builder.Services.AddAuthentication(options =>
     {
+        // This application will use a Cookie to store the user's access and refresh tokens
         options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        
+        // To "login", users are challenged using OpenID Connect.
         options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
     })
     .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -26,16 +29,27 @@ builder.Services.AddAuthentication(options =>
         options.ClientId = "test";
         options.ClientSecret = "secret";
         
+        // Tortis IAM uses a cookie to store the user's access and refresh tokens.
         options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-        options.ResponseType = OpenIdConnectResponseType.Code;
+        
+        // We want to return an authorization code and an ID token.
+        options.ResponseType = OpenIdConnectResponseType.CodeIdToken;
 
+        // Gets us the email claim in the access token.
         options.Scope.Add("email");
+        
+        // Gets us the an id_token
+        options.Scope.Add("profile");
+        
+        // Gets us a refresh token.
+        options.Scope.Add("offline_access");
+        
+        // Application specific scopes.
         options.Scope.Add("fullaccess");
         
         options.SaveTokens = true;
         options.GetClaimsFromUserInfoEndpoint = true;
 
-        options.MapInboundClaims = false;
         options.TokenValidationParameters.NameClaimType = JwtRegisteredClaimNames.Name;
         options.TokenValidationParameters.RoleClaimType = "roles";
     });

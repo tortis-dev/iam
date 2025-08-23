@@ -8,7 +8,7 @@
 
 <FluentEditForm Model="Model" OnValidSubmit="Submit">
     <FluentGrid Justify="JustifyContent.FlexStart">
-        <FluentGridItem md="6">
+        <FluentGridItem md="7">
             <FluentStack Orientation="Orientation.Vertical">
 
                 <DataAnnotationsValidator/>
@@ -53,7 +53,7 @@
             </FluentStack>
             
         </FluentGridItem>
-        <FluentGridItem md="6">
+        <FluentGridItem md="5">
             <FluentStack Orientation="Orientation.Vertical">
                 <FluentLabel Weight="FontWeight.Bold">Allowed Grant Types</FluentLabel>
                 <FluentCheckbox Label="Auth Code" @bind-Value="Model.AllowAuthCode" />
