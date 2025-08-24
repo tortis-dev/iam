@@ -11,16 +11,21 @@ using Tortis.Iam.Server.Components.Users;
 
 namespace Tortis.Iam.Server.Components.OpenIdConnect;
 
+/// <summary>
+/// The UserInfo Endpoint is an OAuth 2.0 Protected Resource that returns Claims about the authenticated End-User. 
+/// https://openid.net/specs/openid-connect-core-1_0.html#UserInfo
+/// </summary>
 [ApiController]
 [Authorize(AuthenticationSchemes = OpenIddictServerAspNetCoreDefaults.AuthenticationScheme)]
 public class UserInfoController : ControllerBase
 {
-    UserManager<IamUser> _userManager;
-    ILogger<UserInfoController> _logger;
+    readonly UserManager<IamUser> _userManager;
+    readonly ILogger<UserInfoController> _logger;
 
-    public UserInfoController(UserManager<IamUser> userManager)
+    public UserInfoController(UserManager<IamUser> userManager, ILogger<UserInfoController> logger)
     {
         _userManager = userManager;
+        _logger = logger;
     }
 
     [HttpGet(TortisOpenIdConstants.USERINFO_ENDPOINT)]
