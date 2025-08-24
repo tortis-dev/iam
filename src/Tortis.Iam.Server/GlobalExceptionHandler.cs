@@ -1,5 +1,7 @@
 // "Licensed under GPL-3."
 
+using System.Diagnostics;
+
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
@@ -25,7 +27,8 @@ sealed class GlobalExceptionHandler : IExceptionHandler
             Title = "Unknown Error",
             Extensions =
             {
-                ["traceIdentifier"] = httpContext.TraceIdentifier,
+                ["requestId"] = httpContext.TraceIdentifier,
+                ["traceId"] = Activity.Current?.TraceId.ToString()
             }
         };
 

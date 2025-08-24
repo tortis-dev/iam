@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.FluentUI.AspNetCore.Components;
 using OpenIddict.Abstractions;
@@ -173,10 +174,17 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 app.UseExceptionHandler(new ExceptionHandlerOptions
 {
+    ExceptionHandlingPath = "/error",
     ExceptionHandler = context =>
     {
-        context.Response.StatusCode = 500;
-        return context.Response.WriteAsync("An error occurred while processing your request.");
+        if (context.Request.Path.StartsWithSegments("connect")
+            || context.Request.Path.StartsWithSegments("api"))
+        {
+            context.Response.StatusCode = 500;
+            return context.Response.WriteAsync("An error occurred while processing your request.");
+        }
+        
+        return Task.CompletedTask;
     }
 });
 
