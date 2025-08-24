@@ -1,0 +1,84 @@
+@page "/roles/{id:guid}"
+@rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Tortis.Iam.Server.Data
+
+@inject RoleManager<IamRole> RoleManager
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@attribute [Authorize]
+
+<PageTitle>Edit Role: @Model.Name</PageTitle>
+<h3>Edit Role</h3>
+
+@if (isLoading)
+{
+    <div>Loading...</div>
+}
+else
+{
+    <FluentEditForm Model="Model" OnValidSubmit="Submit">
+        <DataAnnotationsValidator/>
+        <FluentStack Orientation="Orientation.Vertical">
+            <FluentTextField @bind-Value="Model.Name" Label="Role Name"></FluentTextField>
+            <FluentValidationMessage For="() => Model.Name"></FluentValidationMessage>
+            
+            <FluentStack Orientation="Orientation.Horizontal">
+                <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent">Save</FluentButton>
+                <FluentButton OnClick="@(() => NavigationManager.NavigateTo("/roles"))">Cancel</FluentButton>
+            </FluentStack>
+        </FluentStack>
+    </FluentEditForm>
+}
+
+@code {
+    [Parameter]
+    public required Guid Id { get; init; }
+    
+    private sealed class InputModel
+    {
+        [Required]
+        public string Name { get; set; } = string.Empty;
+    };
+    
+    InputModel Model { get; set; } = new();
+    bool isLoading = true;
+    IamRole? role;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        
+        role = await RoleManager.FindByIdAsync(Id.ToString());
+        
+        if (role is null)
+        {
+            NavigationManager.NavigateTo("/roles");
+            return;
+        }
+        
+        Model.Name = role.Name ?? string.Empty;
+        isLoading = false;
+    }
+
+    async Task Submit()
+    {
+        if (role is null) return;
+        
+        role.Name = Model.Name;
+        role.NormalizedName = Model.Name.ToUpperInvariant();
+        role.ModifiedOn = DateTimeOffset.Now;
+        role.ModifiedBy = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User.FindFirstValue(ClaimTypes.NameIdentifier);
+        
+        var result = await RoleManager.UpdateAsync(role);
+        
+        if (!result.Succeeded)
+            return;
+        
+        NavigationManager.NavigateTo("/roles");
+    }
+}

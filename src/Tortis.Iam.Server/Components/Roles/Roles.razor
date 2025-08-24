@@ -1,4 +1,5 @@
 @page "/roles"
+@rendermode InteractiveServer
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Identity
 @using Tortis.Iam.Server.Data
@@ -6,16 +7,23 @@
 @inject IamDbContext DbContext;
 @inject NavigationManager Navigation;
 
+@attribute [Authorize]
+
 <PageTitle>Roles</PageTitle>
 <h3>Roles</h3>
-<FluentButton Appearance="Appearance.Accent">New Role</FluentButton>
+<FluentButton Appearance="Appearance.Accent" OnClick="@(() => Navigation.NavigateTo("/add-role"))">New Role</FluentButton>
 <FluentDataGrid Items="_roles">
     <PropertyColumn Property="p => p.Name" Title="Role Name" Sortable="true" IsDefaultSortColumn="true" />
+    <TemplateColumn Title="Actions">
+        <FluentButton OnClick="@(() => Navigation.NavigateTo($"roles/{context.Id}"))">
+            <FluentIcon Value="@(new Icons.Regular.Size16.Edit())" Color="Color.Neutral"></FluentIcon>
+        </FluentButton>
+    </TemplateColumn>
 </FluentDataGrid>
 
 
 @code {
-    IQueryable<IdentityRole<Guid>> _roles;
+    IQueryable<IamRole> _roles;
 
     protected override async Task OnInitializedAsync()
     {

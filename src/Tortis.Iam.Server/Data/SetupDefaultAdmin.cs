@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using OpenIddict.Abstractions;
 
+using Tortis.Iam.Server.Components.Roles;
 using Tortis.Iam.Server.Components.Users;
 
 namespace Tortis.Iam.Server.Data;
@@ -50,8 +51,11 @@ sealed class SetupDefaultAdmin : BackgroundService
 
     async Task CreateAdministratorRoleAsync(IServiceProvider container)
     {
-        var roleManager = container.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
-        await roleManager.CreateAsync(new IdentityRole<Guid>("Administrator"));
+        var roleManager = container.GetRequiredService<RoleManager<IamRole>>();
+        await roleManager.CreateAsync(new IamRole("Administrator")
+        {
+            CreatedBy = "Installer"
+        });
     }
 
     async Task CreateAdminUserAsync(IServiceProvider container, CancellationToken stoppingToken)

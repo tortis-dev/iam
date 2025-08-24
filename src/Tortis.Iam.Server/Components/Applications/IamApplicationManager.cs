@@ -1,4 +1,4 @@
-// Licensed under GPL-3.
+// Licensed under GPL-3 (https://www.gnu.org/licenses/gpl-3.0.en.html)
 
 using Microsoft.Extensions.Options;
 
@@ -13,8 +13,9 @@ public class IamApplicationManager : OpenIddictApplicationManager<OpenIddictEnti
     public IamApplicationManager(
         IOpenIddictApplicationCache<OpenIddictEntityFrameworkCoreApplication<Guid>> cache,
         ILogger<OpenIddictApplicationManager<OpenIddictEntityFrameworkCoreApplication<Guid>>> logger,
-        IOptionsMonitor<OpenIddictCoreOptions> options, IOpenIddictApplicationStoreResolver resolver) 
-        : base(cache, logger, options, resolver)
+        IOptionsMonitor<OpenIddictCoreOptions> options,
+        IOpenIddictApplicationStore<OpenIddictEntityFrameworkCoreApplication<Guid>> store) 
+        : base(cache, logger, options, store)
     {
     }
 

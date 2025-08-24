@@ -10,6 +10,7 @@ using Tortis.Iam.Server.Components;
 using Tortis.Iam.Server.Components.Account;
 using Tortis.Iam.Server.Components.Applications;
 using Tortis.Iam.Server.Components.OpenIdConnect;
+using Tortis.Iam.Server.Components.Roles;
 using Tortis.Iam.Server.Components.Users;
 using Tortis.Iam.Server.Data;
 
@@ -144,7 +145,7 @@ builder.Services
         //TODO: from config
         options.SignIn.RequireConfirmedAccount = true;
     })
-    .AddRoles<IdentityRole<Guid>>()
+    .AddRoles<IamRole>()
     .AddEntityFrameworkStores<IamDbContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
