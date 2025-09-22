@@ -30,7 +30,7 @@ public class ApplicationViewModel
 
     public bool RequiredProofKeyForCodeExchange { get; set; }
 
-    public List<string> Scopes { get; set; } = new List<string>(){"Test"};
+    public List<string> Scopes { get; } = [];
 }
 
 static class MappingExtensions
@@ -62,6 +62,12 @@ static class MappingExtensions
         model.AllowIdToken = application.Permissions?.Contains(OpenIddictConstants.Permissions.ResponseTypes.IdToken) ?? false;
         model.AllowCodeIdToken = application.Permissions?.Contains(OpenIddictConstants.Permissions.ResponseTypes.CodeIdToken) ?? false;
         model.RequiredProofKeyForCodeExchange = application.Requirements?.Contains(OpenIddictConstants.Requirements.Features.ProofKeyForCodeExchange) ?? false;
+        
+        if(application.Permissions is not null)
+            model.Scopes.AddRange(
+                application.Permissions
+                    .Where(p => p.StartsWith(OpenIddictConstants.Permissions.Prefixes.Scope))
+                    .Select(p => p.Substring(OpenIddictConstants.Permissions.Prefixes.Scope.Length)));
         
         return model;
     }

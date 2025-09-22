@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using OpenIddict.Abstractions;
 
+using Tortis.Iam.Server.Components.Resources;
 using Tortis.Iam.Server.Components.Roles;
 using Tortis.Iam.Server.Components.Users;
 
@@ -95,7 +96,7 @@ sealed class SetupDefaultAdmin : BackgroundService
     async Task CreateTestResourceAsync(IServiceProvider container, CancellationToken stoppingToken)
     {
         var applicationManager = container.GetRequiredService<IOpenIddictApplicationManager>();
-
+        var resourceManager = container.GetRequiredService<IamResourceManager>();
         const string resourceId = "test-resource";
         
         var resource = await applicationManager.FindByClientIdAsync(resourceId);

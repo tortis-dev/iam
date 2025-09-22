@@ -26,6 +26,8 @@ public class TokenEndpointController : ControllerBase
         
         var request = HttpContext.GetOpenIddictServerRequest() ??
                       throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
+        
+        // TODO: Validate the resource is valid if the request contains a resource parameter.
 
         ClaimsPrincipal? claimsPrincipal;
 
@@ -40,8 +42,10 @@ public class TokenEndpointController : ControllerBase
             identity.AddClaim("some-claim", "some-value", OpenIddictConstants.Destinations.AccessToken);
 
             claimsPrincipal = new ClaimsPrincipal(identity);
-
+            
             claimsPrincipal.SetScopes(request.GetScopes());
+            
+            // TODO: Set resources
         }
         else if (request.IsAuthorizationCodeGrantType())
         {

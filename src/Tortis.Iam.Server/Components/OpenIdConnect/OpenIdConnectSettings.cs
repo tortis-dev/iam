@@ -5,9 +5,9 @@ public class OpenIdConnectSettings
     public bool EnablePasswordGrant { get; set; }
     public bool EnableHybridFlow { get; set; }
     public bool EnableImplicitFlow { get; set; }
-    public bool RequirePkce { get; set; } = true;
     public bool EnableClientCredentialsFlow { get; set; } = true;
     public bool EnableAuthorizationCodeFlow { get; set; } = true;
+    public bool RequirePkceGlobally { get; set; } = true;
     public bool EnableRefreshTokenFlow { get; set; } = true;
     public bool EnableDeviceFlow { get; set; }
     public bool EnableUserinfoEndpoint { get; set; }
