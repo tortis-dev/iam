@@ -18,30 +18,10 @@
     Applications use OpenId Connect to authenticate users and/or call APIs also registered with Tortis Iam.
 </p>
 <FluentButton Appearance="Appearance.Accent" OnClick="@(() => Navigation.NavigateTo("/add-application"))">New Application</FluentButton>
-<FluentDataGrid Items="_applications">
+<FluentDataGrid Items="_applications" Pagination="@_pagination">
     <PropertyColumn Property="p => p.DisplayName" Title="Name" Sortable="true" IsDefaultSortColumn="true" />
     <PropertyColumn Property="p => p.ClientId" Title="Client Id" Sortable="true" />
     <PropertyColumn Property="p => p.ApplicationType" Title="Application Type" Sortable="true" />
-    @* <TemplateColumn Title="2FA" Sortable="true"> *@
-    @*     @if(context.TwoFactorEnabled) *@
-    @*     { *@
-    @*         <FluentIcon Value="@(new Icons.Regular.Size16.Checkmark())" Color="Color.Success" /> *@
-    @*     } *@
-    @*     else *@
-    @*     { *@
-    @*         <FluentIcon Value="@(new Icons.Regular.Size16.Dismiss())" Color="Color.Error" /> *@
-    @*     } *@
-    @* </TemplateColumn> *@
-    @* <TemplateColumn Title="Locked" Sortable="true"> *@
-    @*     @if(context.AccountLocked) *@
-    @*     { *@
-    @*         <FluentIcon Value="@(new Icons.Regular.Size16.LockClosed())" Color="Color.Error" Title="Account is locked." /> *@
-    @*     } *@
-    @*     else *@
-    @*     { *@
-    @*         <FluentIcon Value="@(new Icons.Regular.Size16.LockOpen())" Color="Color.Success" Title="Account is unlocked." /> *@
-    @*     } *@
-    @* </TemplateColumn> *@
     <TemplateColumn Title="Actions" Width="120px">
         <FluentButton OnClick="@(() => Navigation.NavigateTo($"applications/{context.Id}"))">
             <FluentIcon Value="@(new Icons.Regular.Size16.Edit())" Color="Color.Neutral"></FluentIcon>
@@ -51,8 +31,10 @@
         </FluentButton>
     </TemplateColumn>
 </FluentDataGrid>
+<FluentPaginator State="@_pagination" />
 
 @code {
+    readonly PaginationState _pagination = new() { ItemsPerPage = 10 } ;
     IQueryable<OpenIddictEntityFrameworkCoreApplication<Guid>> _applications;
 
     protected override async Task OnInitializedAsync()

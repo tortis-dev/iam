@@ -1,9 +1,10 @@
 @page "/users"
 @rendermode InteractiveServer
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
 @using Tortis.Iam.Server.Data
 
-@inject IamDbContext IamDbContext;
+@inject UserManager<IamUser> UserManager;
 @inject NavigationManager Navigation;
 
 @attribute [Authorize]
@@ -11,7 +12,7 @@
 <PageTitle>Users</PageTitle>
 <h3>Users</h3>
 <FluentButton Appearance="Appearance.Accent" OnClick="@(() => Navigation.NavigateTo("/add-user"))">New User</FluentButton>
-<FluentDataGrid Items="_users">
+<FluentDataGrid Items="_users" Pagination="@_pagination">
     <PropertyColumn Property="p => p.UserName" Title="Username" Sortable="true" IsDefaultSortColumn="true" />
     <PropertyColumn Property="p => p.Email" Title="Email" Sortable="true" />
     <TemplateColumn Title="2FA" Sortable="true">
@@ -43,13 +44,14 @@
         </FluentButton>
     </TemplateColumn>
 </FluentDataGrid>
+<FluentPaginator State="@_pagination" />
 
 @code {
     IQueryable<IamUser> _users;
-
+    readonly PaginationState _pagination = new() { ItemsPerPage = 10 };
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        _users = IamDbContext.Users;
+        _users = UserManager.Users;
     }
 }

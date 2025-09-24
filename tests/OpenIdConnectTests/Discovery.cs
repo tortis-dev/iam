@@ -1,8 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json.Nodes;
-using Serilog;
-using Xunit.Abstractions;
 
 namespace OpenIdConnectTests;
 
@@ -12,14 +10,14 @@ public class Discovery : IClassFixture<ServerFixture>
 
     public Discovery(ServerFixture server, ITestOutputHelper output)
     {
-        Log.Logger = new LoggerConfiguration().WriteTo.TestOutput(output).CreateLogger();
         _server = server;
     }
 
     [Fact]
     public async Task Endpoint()
     {
-        var responseMessage = await _server.Client.GetAsync(".well-known/openid-configuration");
+        var client = _server.Client;
+        var responseMessage = await client.GetAsync(".well-known/openid-configuration", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, responseMessage.StatusCode);
     }
 

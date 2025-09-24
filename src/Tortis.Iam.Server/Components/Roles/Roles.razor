@@ -12,7 +12,7 @@
 <PageTitle>Roles</PageTitle>
 <h3>Roles</h3>
 <FluentButton Appearance="Appearance.Accent" OnClick="@(() => Navigation.NavigateTo("/add-role"))">New Role</FluentButton>
-<FluentDataGrid Items="_roles">
+<FluentDataGrid Items="_roles" Pagination="@_pagination">
     <PropertyColumn Property="p => p.Name" Title="Role Name" Sortable="true" IsDefaultSortColumn="true" />
     <TemplateColumn Title="Actions">
         <FluentButton OnClick="@(() => Navigation.NavigateTo($"roles/{context.Id}"))">
@@ -20,11 +20,11 @@
         </FluentButton>
     </TemplateColumn>
 </FluentDataGrid>
-
+<FluentPaginator State="@_pagination" />
 
 @code {
+    readonly PaginationState _pagination = new() { ItemsPerPage = 10 } ;
     IQueryable<IamRole> _roles;
-
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();

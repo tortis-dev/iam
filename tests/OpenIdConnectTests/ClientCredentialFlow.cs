@@ -4,7 +4,6 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using Serilog;
-using Xunit.Abstractions;
 
 namespace OpenIdConnectTests;
 
@@ -15,7 +14,6 @@ public class ClientCredentialFlow: IClassFixture<ServerFixture>, IAsyncLifetime
 
     public ClientCredentialFlow(ServerFixture server, ITestOutputHelper output)
     {
-        Log.Logger = new LoggerConfiguration().WriteTo.TestOutput(output).CreateLogger();
         _server = server;
         _output = output;
     }
@@ -60,7 +58,7 @@ public class ClientCredentialFlow: IClassFixture<ServerFixture>, IAsyncLifetime
     }
 
     // Runs once per Fact
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         await using var asyncServiceScope = _server.Factory.Services.CreateAsyncScope();
         var applicationManager = asyncServiceScope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
@@ -86,8 +84,8 @@ public class ClientCredentialFlow: IClassFixture<ServerFixture>, IAsyncLifetime
         }, CancellationToken.None);
     }
 
-    public Task DisposeAsync()
+    public ValueTask DisposeAsync()
     {
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 }

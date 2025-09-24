@@ -91,6 +91,24 @@ sealed class SetupDefaultAdmin : BackgroundService
 
             await userManager.AddToRoleAsync(admin, "Administrator");
         }
+
+#if DEBUG
+        var numUsers = userManager.Users.Count();
+        if (numUsers < 50)
+            for (int i = 1; i < 50; i++)
+            {
+                var result = await userManager.CreateAsync(new IamUser
+                {
+                    Id = Ulid.NewUlid().ToGuid(),
+                    UserName = $"TestUser{i}@acme.com",
+                    Email = $"TestUser{i}@acme.com",
+                    EmailConfirmed = true,
+                    PhoneNumber = $"555-555-55{i,2:00}",
+                    CreatedOn = DateTimeOffset.Now,
+                    CreatedBy = "Installer"
+                }, defaultPassword);
+            }
+#endif
     }
 
     async Task CreateTestResourceAsync(IServiceProvider container, CancellationToken stoppingToken)

@@ -63,7 +63,7 @@ public class IamDbContext : IdentityDbContext<IamUser, IamRole, Guid>
         builder.Entity<IdentityUserLogin<Guid>>().ToTable("iam_user_login");
         builder.Entity<IdentityUserToken<Guid>>().ToTable("iam_user_token");
         
-        //OpenIdDict Tables
+        //OpenIddict Tables
         builder.Entity<OpenIddictEntityFrameworkCoreApplication<Guid>>().ToTable("iam_oidc_applications");
         builder.Entity<OpenIddictEntityFrameworkCoreScope<Guid>>().ToTable("iam_oidc_scopes");
         builder.Entity<OpenIddictEntityFrameworkCoreAuthorization<Guid>>().ToTable("iam_oidc_authorizations");

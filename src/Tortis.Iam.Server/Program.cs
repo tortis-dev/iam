@@ -29,11 +29,11 @@ using Tortis.Iam.Server.Data;
 const string consoleLogTemplate = "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties} {NewLine}{Exception}";
 
 // A bare minimum bootstrap logger to capture any exceptions thrown during startup.
-Log.Logger = new LoggerConfiguration().WriteTo.Console(outputTemplate: consoleLogTemplate).CreateBootstrapLogger();
+var logger = new LoggerConfiguration().WriteTo.Console(outputTemplate: consoleLogTemplate).CreateBootstrapLogger();
 
 try
 {
-    Log.Information("Starting up...");
+    logger.Information("Starting up...");
     var instanceId = Guid.NewGuid().ToString();
     var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0.0";
 
@@ -41,8 +41,9 @@ try
 
     builder.Configuration
         .AddEnvironmentVariables("TORTIS__IAM__") // We want to use a custom prefix for environment variables.
-        .AddCommandLine(args); // We still want command line arguments to override environment variables.
-
+        .AddCommandLine(args) // We still want command line arguments to override environment variables.
+        .AddTestConfiguration(); // Unit tests can use this to flow state to the main program and change configuration.
+    
     // Configure Kestrel
     builder.WebHost.ConfigureKestrel(options =>
     {
@@ -82,14 +83,17 @@ try
         )
         .WithMetrics(metrics =>
             metrics
+                .AddOtlpExporter()
                 .AddRuntimeInstrumentation()
                 .AddAspNetCoreInstrumentation())
         .WithTracing(tracing =>
             tracing
+                .AddOtlpExporter()
                 .AddAspNetCoreInstrumentation()
-                .AddEntityFrameworkCoreInstrumentation());
-
-
+                .AddEntityFrameworkCoreInstrumentation(options =>
+                {
+                    options.SetDbStatementForText = true;
+                }));
 
     // Configure MVC
     builder.Services.AddControllers();
@@ -114,26 +118,30 @@ try
         .AddIdentityCookies();
 
     // Database
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
-                           throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-
     var databaseProvider = builder.Configuration.GetValue<string>("DatabaseProvider") ?? "Sqlite";
-    var databaseSchema = builder.Configuration.GetValue<string>("DatabaseSchema") ?? "iam";
-
+    
     builder.Services.AddDbContext<IamDbContext>(options =>
     {
-        if (databaseProvider == "SqlServer")
-            options.UseSqlServer(connectionString,
-                sql => sql.MigrationsHistoryTable(IamDbContext.HISTORY_TABLE_NAME, databaseSchema));
-        else if (databaseProvider == "Sqlite")
-            options.UseSqlite(
-                $"Filename=./Data/{databaseSchema}.db",
+        if (databaseProvider == "Sqlite")
+        {
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Filename=./Data/iam.db";
+            options.UseSqlite(connectionString, 
                 sqlite => sqlite.MigrationsHistoryTable(IamDbContext.HISTORY_TABLE_NAME));
-
+        }
+        else
+        {
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
+                                   throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+            var databaseSchema = builder.Configuration.GetValue<string>("DatabaseSchema") ?? "iam";
+            
+            if (databaseProvider == "SqlServer")
+                options.UseSqlServer(connectionString,
+                    sql => sql.MigrationsHistoryTable(IamDbContext.HISTORY_TABLE_NAME, databaseSchema));
+        }
+        
         // Use OpenIdDict entities with Guid ID type
         options.UseOpenIddict<Guid>();
     });
-    builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
     // OpenIdDict uses Quartz to schedule background jobs for cleaning up token caches.
     builder.Services.AddQuartz(options =>
@@ -274,9 +282,43 @@ try
 }
 catch (Exception ex)
 {
-    Log.Fatal(ex, "Host terminated unexpectedly");
+    logger.Fatal(ex, "Host terminated unexpectedly");
 }
 finally
 {
-    Log.CloseAndFlush();
+    // Flushes any log messages and closes the logger.
+    logger.Dispose();
+}
+
+/// <summary>
+/// https://github.com/dotnet/aspnetcore/issues/37680#issuecomment-1331559463
+/// </summary>
+internal static class TestConfiguration
+{
+    // This async local is set in from tests and it flows to main
+    static readonly AsyncLocal<Action<IConfigurationBuilder>?> _current = new();
+
+    /// <summary>
+    /// Adds the current test configuration to the application in the "right" place
+    /// </summary>
+    /// <param name="configurationBuilder">The configuration builder</param>
+    /// <returns>The modified <see cref="IConfigurationBuilder"/></returns>
+    public static IConfigurationBuilder AddTestConfiguration(this IConfigurationBuilder configurationBuilder)
+    {
+        if (_current.Value is { } configure)
+        {
+            configure(configurationBuilder);
+        }
+
+        return configurationBuilder;
+    }
+
+    /// <summary>
+    /// Unit tests can use this to flow state to the main program and change configuration
+    /// </summary>
+    /// <param name="action"></param>
+    public static void Create(Action<IConfigurationBuilder> action)
+    {
+        _current.Value = action;
+    }
 }

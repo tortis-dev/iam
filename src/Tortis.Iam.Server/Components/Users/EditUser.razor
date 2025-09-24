@@ -1,76 +1,138 @@
 @page "/users/{userId:guid}"
 @rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Identity
 
 @inject UserManager<IamUser> UserManager;
 
 <h3>Edit User</h3>
-<FluentEditForm Model="@Model">
-  <FluentStack Orientation="Orientation.Vertical">
-    <FluentTextField @bind-Value="@Model.Username" Label="Username" ReadOnly="true"/>
-    <FluentTextField @bind-Value="@Model.Email" Label="Email">
-      @if (!string.IsNullOrWhiteSpace(Model.Email))
-      {
-        if (Model.EmailConfirmed)
-        {
-          <FluentIcon Value="@(new Icons.Regular.Size16.Checkmark())" Color="Color.Success" Slot="end" Title="Email Confirmed"/>
-        }
-        else
-        {
-          <FluentIcon Value="@(new Icons.Regular.Size16.Warning())" Color="Color.Warning" Slot="end" Title="Email Not Confirmed"/>
-        }
-      }
-    </FluentTextField>
-    <FluentTextField @bind-Value="@Model.PhoneNumber" Label="Phone Number" TextFieldType="TextFieldType.Tel">
-      @if (!string.IsNullOrWhiteSpace(Model.PhoneNumber))
-      {
-        if (Model.PhoneNumberConfirmed)
-        {
-          <FluentIcon Value="@(new Icons.Regular.Size16.Checkmark())" Color="Color.Success" Slot="end" Title="Phone Number Confirmed"/>
-        }
-        else
-        {
-          <FluentIcon Value="@(new Icons.Regular.Size16.Warning())" Color="Color.Warning" Slot="end" Title="Phone Number Not Confirmed"/>
-        }
-      }
-    </FluentTextField>
-    <FluentSwitch @bind-Value="@Model.TwoFactorEnabled" Label="Enable Two Factor Authentication"/>
-    <FluentSwitch @bind-Value="@Model.AccountLocked" Label="Account Locked"/>
-  </FluentStack>
+<FluentEditForm EditContext="@_editContext" OnValidSubmit="@Submit">
+    <FluentGrid>
+        <FluentGridItem xs="12" sm="12" md="6" lg="4" xl="4">
+            <FluentStack Orientation="Orientation.Vertical">
+                <FluentTextField @bind-Value="@_model.Username" Label="Username" ReadOnly="true" Style="width: 100%"/>
+                
+                <FluentTextField @bind-Value="@_model.Email" Label="Email" Style="width: 100%">
+                    @if (!string.IsNullOrWhiteSpace(_model.Email))
+                    {
+                        if (_model.EmailConfirmed)
+                        {
+                            <FluentIcon Value="@(new Icons.Regular.Size16.Checkmark())" Color="Color.Success" Slot="end"
+                                        Title="Email Confirmed"/>
+                        }
+                        else
+                        {
+                            <FluentIcon Value="@(new Icons.Regular.Size16.Warning())" Color="Color.Warning" Slot="end"
+                                        Title="Email Not Confirmed"/>
+                        }
+                    }
+                </FluentTextField>
+                <FluentTextField @bind-Value="@_model.PhoneNumber" Label="Phone Number" TextFieldType="TextFieldType.Tel" Style="width: 100%">
+                    @if (!string.IsNullOrWhiteSpace(_model.PhoneNumber))
+                    {
+                        if (_model.PhoneNumberConfirmed)
+                        {
+                            <FluentIcon Value="@(new Icons.Regular.Size16.Checkmark())" Color="Color.Success" Slot="end"
+                                        Title="Phone Number Confirmed"/>
+                        }
+                        else
+                        {
+                            <FluentIcon Value="@(new Icons.Regular.Size16.Warning())" Color="Color.Warning" Slot="end"
+                                        Title="Phone Number Not Confirmed"/>
+                        }
+                    }
+                </FluentTextField>
+                <FluentTextField @bind-Value="_model.GivenName" Label="Given Name" Style="width: 100%"/>
+                <FluentTextField @bind-Value="_model.FamilyName" Label="Family Name" Style="width: 100%"/>
+                <FluentSwitch @bind-Value="@_model.TwoFactorEnabled" Label="Enable Two Factor Authentication" />
+                <FluentSwitch @bind-Value="@_model.AccountLocked" Label="Account Locked"/>
+                <FluentButton Loading="@_saving" Type="ButtonType.Submit" Title="Save the changes"
+                              Appearance="Appearance.Accent" Disabled="@_saveButtonDisabled">Save
+                </FluentButton>
+            </FluentStack>
+        </FluentGridItem>
+    </FluentGrid>
+
 </FluentEditForm>
+
 @code {
-    [Parameter]
-    public Guid UserId { get; set; }
+    [Parameter] public Guid UserId { get; set; }
 
-    InputModel Model { get; set; }
+    InputModel _model;
+    EditContext _editContext;
 
+    bool _saving;
+    bool _saveButtonDisabled;
+    
     private class InputModel
     {
-        public required string Username { get; set; }
+        public string Username { get; set; }
+        [EmailAddress]
         public string? Email { get; set; }
         public bool EmailConfirmed { get; set; }
         public bool TwoFactorEnabled { get; set; }
         public bool AccountLocked { get; set; }
         public string? PhoneNumber { get; set; }
         public bool PhoneNumberConfirmed { get; set; }
+        public string? GivenName { get; set; }
+        public string? FamilyName { get; set; }
     }
-    
+
     protected override async Task OnInitializedAsync()
     {
-      var user = await UserManager.FindByIdAsync(UserId.ToString());
-      if (user is null)
-        return; //TODO: handle this.
+        _saveButtonDisabled = true;
+        var user = await UserManager.FindByIdAsync(UserId.ToString());
+        if (user is null)
+            return; //TODO: handle the case where the user is not found.
 
-      Model = new InputModel
-      {
-        Username = user.UserName ?? string.Empty, //should never be null, but you never know.
-        Email = user.Email,
-        EmailConfirmed = user.EmailConfirmed,
-        TwoFactorEnabled = user.TwoFactorEnabled,
-        AccountLocked = user.AccountLocked,
-        PhoneNumber = user.PhoneNumber,
-        PhoneNumberConfirmed = user.PhoneNumberConfirmed
-      };
+        _model = new InputModel
+        {
+            Username = user.UserName ?? string.Empty, //should never be null, but you never know.
+            Email = user.Email,
+            EmailConfirmed = user.EmailConfirmed,
+            GivenName = user.GivenName,
+            FamilyName = user.FamilyName,
+            TwoFactorEnabled = user.TwoFactorEnabled,
+            AccountLocked = user.AccountLocked,
+            PhoneNumber = user.PhoneNumber,
+            PhoneNumberConfirmed = user.PhoneNumberConfirmed
+        };
+
+        _editContext = new EditContext(_model);
+        _editContext.OnFieldChanged += (_, _) => _saveButtonDisabled = false;
     }
 
+    async Task Submit()
+    {
+        _saving = true;
+        var user = await UserManager.FindByIdAsync(UserId.ToString());
+        if (user is null)
+            return; //TODO: handle the case where the user is not found.
+
+        user.UserName = _model.Username;
+        user.GivenName = _model.GivenName;
+        user.FamilyName = _model.FamilyName;
+        user.Email = _model.Email;
+        user.PhoneNumber = _model.PhoneNumber;
+        user.TwoFactorEnabled = _model.TwoFactorEnabled;
+
+        if (_model.AccountLocked && !user.AccountLocked) // Unlocked --> Locked
+        {
+            user.LockUser();
+        }
+        else if (!_model.AccountLocked && user.AccountLocked) // Locked --> Unlocked
+        {
+            user.UnlockUser();
+        }
+
+        var result = await UserManager.UpdateAsync(user);
+
+        if (!result.Succeeded)
+        {
+            // TODO: handle the case where the update failed.
+        }
+
+        _saving = false;
+        _saveButtonDisabled = true;
+    }
 }
