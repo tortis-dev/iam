@@ -14,7 +14,8 @@
 <FluentButton Appearance="Appearance.Accent" OnClick="@(() => Navigation.NavigateTo("/add-role"))">New Role</FluentButton>
 <FluentDataGrid Items="_roles" Pagination="@_pagination">
     <PropertyColumn Property="p => p.Name" Title="Role Name" Sortable="true" IsDefaultSortColumn="true" />
-    <TemplateColumn Title="Actions">
+    <PropertyColumn Property="p => p.Description" Title="Description" />
+    <TemplateColumn Title="Actions" Width="100px">
         <FluentButton OnClick="@(() => Navigation.NavigateTo($"roles/{context.Id}"))">
             <FluentIcon Value="@(new Icons.Regular.Size16.Edit())" Color="Color.Neutral"></FluentIcon>
         </FluentButton>

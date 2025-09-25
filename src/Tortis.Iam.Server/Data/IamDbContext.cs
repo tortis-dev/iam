@@ -51,6 +51,7 @@ public class IamDbContext : IdentityDbContext<IamUser, IamRole, Guid>
         builder.Entity<IamRole>(role =>
         {
             role.ToTable("iam_roles");
+            role.Property(p => p.Description).HasMaxLength(512);
             role.Property(p => p.CreatedOn);
             role.Property(p => p.CreatedBy).HasMaxLength(36);
             role.Property(p => p.ModifiedOn);

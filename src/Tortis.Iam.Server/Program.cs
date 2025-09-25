@@ -3,6 +3,7 @@ using System.Reflection;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.FluentUI.AspNetCore.Components;
 using OpenIddict.Abstractions;
 
@@ -52,6 +53,25 @@ try
         options.ConfigureEndpointDefaults(endpoint => endpoint.UseHttps());
     });
 
+    if (builder.Environment.IsDevelopment())
+    {
+        builder.Services.AddHsts(options =>
+        {
+            options.Preload = true;
+            options.IncludeSubDomains = true;
+            options.MaxAge = TimeSpan.FromSeconds(10);
+        });
+    }
+    else
+    {
+        builder.Services.AddHsts(options =>
+        {
+            options.Preload = true;
+            options.IncludeSubDomains = true;
+            options.MaxAge = TimeSpan.FromDays(60);
+        });
+    }
+    
     // Logging, monitoring, and telemetry
     builder.Logging.ClearProviders();
     builder.Services.AddSerilog(loggerConfiguration => 
@@ -108,7 +128,8 @@ try
     builder.Services.AddDataGridEntityFrameworkAdapter();
 
     // Authentication/Authorization
-    builder.Services
+    builder.AddAuthorization()
+        .Services
         .AddCascadingAuthenticationState()
         .AddAuthentication(options =>
         {
@@ -221,31 +242,22 @@ try
         .AddIdentityCore<IamUser>(options =>
         {
             //TODO: Default password policy to current NIST/NSA recommendations
-            //TODO: from config
-            options.SignIn.RequireConfirmedAccount = true;
+            options.SignIn.RequireConfirmedAccount = builder.Configuration.GetValue<bool>("SignIn.RequireConfirmedAccount");
         })
         .AddRoles<IamRole>()
         .AddEntityFrameworkStores<IamDbContext>()
         .AddSignInManager()
         .AddDefaultTokenProviders();
+    builder.Services
+        .Replace(ServiceDescriptor.Scoped<IUserClaimsPrincipalFactory<IamUser>, IamUserClaimsPrincipalFactory>());
 
     // Application services
     builder.Services.AddHostedService<SetupDefaultAdmin>();
 
     var app = builder.Build();
 
-    // var quartz = Quarts
-    // if (!quartz.Clustered)
-    // {
-    //     app.Logger.LogWarning("Quartz is not clustered. This is not recommended for production.");
-    // }
-
     // Configure the HTTP request pipeline.
-    if (app.Environment.IsDevelopment())
-    {
-        app.UseMigrationsEndPoint();
-    }
-    else
+    if (!app.Environment.IsDevelopment())
     {
         // The default HTTP Strict Transport Security (HSTS) value is 30 days.
         // You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
@@ -254,7 +266,6 @@ try
 
     app.UseHttpsRedirection();
     app.UseStaticFiles();
-    app.UseAntiforgery();
     app.UseExceptionHandler(new ExceptionHandlerOptions
     {
         ExceptionHandlingPath = "/error",
@@ -272,10 +283,13 @@ try
     });
 
     app.MapHealthChecks("/health");
+    
+    app.UseAuthentication();
+    app.UseAuthorization();
+    app.UseAntiforgery();
+    
     app.MapControllers();
     app.MapRazorComponents<App>().AddInteractiveServerRenderMode().RequireAuthorization();
-
-    // Add additional endpoints required by the Identity `/Account` Razor components.
     app.MapAdditionalIdentityEndpoints();
 
     app.Run();

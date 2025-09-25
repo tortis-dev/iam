@@ -1,18 +1,14 @@
 @page "/users"
 @rendermode InteractiveServer
-@using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Identity
-@using Tortis.Iam.Server.Data
 
 @inject UserManager<IamUser> UserManager;
 @inject NavigationManager Navigation;
 
-@attribute [Authorize]
-
 <PageTitle>Users</PageTitle>
 <h3>Users</h3>
 <FluentButton Appearance="Appearance.Accent" OnClick="@(() => Navigation.NavigateTo("/add-user"))">New User</FluentButton>
-<FluentDataGrid Items="_users" Pagination="@_pagination">
+<FluentDataGrid Items="_users" Pagination="@_pagination" RowSize="DataGridRowSize.Large">
     <PropertyColumn Property="p => p.UserName" Title="Username" Sortable="true" IsDefaultSortColumn="true" />
     <PropertyColumn Property="p => p.Email" Title="Email" Sortable="true" />
     <TemplateColumn Title="2FA" Sortable="true">

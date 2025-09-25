@@ -1,0 +1,42 @@
+@using Microsoft.AspNetCore.Identity
+@using Tortis.Iam.Server.Components.Roles
+@inject RoleManager<IamRole> RoleManager
+
+@implements IDialogContentComponent<IEnumerable<string>>
+
+<FluentDataGrid TGridItem="IamRole" Items="@_roles">
+    <SelectColumn 
+        SelectMode="DataGridSelectMode.Multiple"
+        @bind-SelectedItems="@_selectedRoles"/>
+    <PropertyColumn Property="r => r.Name"/>
+</FluentDataGrid>
+<FluentDialogFooter>
+    <FluentButton Appearance="Appearance.Accent" OnClick="@AssignAsync">Assign</FluentButton>
+    <FluentButton Appearance="Appearance.Neutral" OnClick="@CancelAsync">Cancel</FluentButton>
+</FluentDialogFooter>
+@code {
+    [Parameter]
+    public IEnumerable<string> Content { get; set; } = default!;
+    
+    [CascadingParameter]
+    public FluentDialog Dialog { get; set; } = default!;
+    
+    IQueryable<IamRole> _roles = default!;
+    IEnumerable<IamRole> _selectedRoles = new List<IamRole>();
+
+    protected override void OnInitialized()
+    {
+        _roles = RoleManager.Roles.Where(r => !Content.Contains(r.Name));
+        base.OnInitialized();
+    }
+    
+    async Task AssignAsync()
+    {
+        await Dialog.CloseAsync(_selectedRoles);
+    }
+
+    async Task CancelAsync()
+    {
+        await Dialog.CancelAsync();
+    }
+}

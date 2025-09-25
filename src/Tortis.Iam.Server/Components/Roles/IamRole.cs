@@ -10,6 +10,7 @@ public class IamRole : IdentityRole<Guid>
     {
     }
 
+    public string? Description { get; set; }
     public DateTimeOffset CreatedOn { get; set; } = DateTimeOffset.Now;
     public DateTimeOffset? ModifiedOn { get; set; }
     public required string CreatedBy { get; set; }

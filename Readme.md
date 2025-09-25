@@ -2,9 +2,37 @@
 
 This project aims to be a FOSS IAM solution.
 
+## Concepts
+
+### Application/Client
+
+An application (aka client) is software that requests tokens for access resources. 
+Example: A web application, a mobile application, a service, etc.
+
+In some cases, an application may be a resource itself. 
+Example: An ASP Net Core MVC application is also a resource.
+
+### Resource
+
+A resource is something you to protect that is to be acessed by clients/applications. 
+This is usually an API (e.g. microservice), but could also be a database, message queue, etc.
+
+### Scope
+
+A scope is a permission associated with a resource that a client can request.
+
+### User
+
+A user is a person that uses an application to access resources.
+
+### Role
+
+A role is a permission that a user can request.
+
+
 ## Features
 
-- [ ] OpenIdConnect/OAuth2.0 Flows/Grant Types
+- [ ] OpenIdConnect/OAuth2.0 Flows and Grant Types
   - [x] Client Credentials
   - [x] Authorization Code + PKCE
   - [X] Refresh Token
@@ -12,6 +40,7 @@ This project aims to be a FOSS IAM solution.
   - [ ] Implicit
   - [X] Hybrid
   - [ ] Delegation/On-Behalf-Of (https://datatracker.ietf.org/doc/html/rfc8693)
+  - [ ] Device Flow
 - [x] Scopes
 - [x] Local logins/users
   - [x] MFA

@@ -68,6 +68,6 @@
         await EmailSender.SendPasswordResetLinkAsync(user, _model.Email!, HtmlEncoder.Default.Encode(resetLink));
 
         _saving = false;
-        NavigationManager.NavigateTo("/users");
+        NavigationManager.NavigateTo($@"/users/{user.Id}");
     }
 }

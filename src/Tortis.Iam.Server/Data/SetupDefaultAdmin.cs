@@ -53,10 +53,25 @@ sealed class SetupDefaultAdmin : BackgroundService
     async Task CreateAdministratorRoleAsync(IServiceProvider container)
     {
         var roleManager = container.GetRequiredService<RoleManager<IamRole>>();
-        await roleManager.CreateAsync(new IamRole("Administrator")
+        var addAdministratorsResult = await roleManager.CreateAsync(new IamRole(Authorization.ADMINISTRATORS)
         {
+            Description = "Administrators have full access to the system.",
             CreatedBy = "Installer"
         });
+        if (!addAdministratorsResult.Succeeded)
+        {
+            throw new ApplicationException($"Could not create administrator role. Caused by {string.Join(',',  addAdministratorsResult.Errors.Select(e => e.Description))}");
+        }
+        
+        var result = await roleManager.CreateAsync(new IamRole(Authorization.SECURITY_ADMINISTRATORS)
+        {
+            Description = "Security Administrators can manage user accounts and roles.",
+            CreatedBy = "Installer"
+        });
+        if (!result.Succeeded)
+        {
+            throw new ApplicationException($"Could not create security administrator role. Caused by {string.Join(',',  result.Errors.Select(e => e.Description))}");
+        }
     }
 
     async Task CreateAdminUserAsync(IServiceProvider container, CancellationToken stoppingToken)
@@ -89,7 +104,7 @@ sealed class SetupDefaultAdmin : BackgroundService
                 Environment.Exit(1);
             }
 
-            await userManager.AddToRoleAsync(admin, "Administrator");
+            await userManager.AddToRoleAsync(admin, Authorization.ADMINISTRATORS);
         }
 
 #if DEBUG

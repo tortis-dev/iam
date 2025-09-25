@@ -26,7 +26,7 @@ else
         <FluentStack Orientation="Orientation.Vertical">
             <FluentTextField @bind-Value="Model.Name" Label="Role Name"></FluentTextField>
             <FluentValidationMessage For="() => Model.Name"></FluentValidationMessage>
-            
+            <FluentTextField @bind-Value="Model.Description" Label="Description"></FluentTextField>
             <FluentStack Orientation="Orientation.Horizontal">
                 <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent">Save</FluentButton>
                 <FluentButton OnClick="@(() => NavigationManager.NavigateTo("/roles"))">Cancel</FluentButton>
@@ -43,38 +43,42 @@ else
     {
         [Required]
         public string Name { get; set; } = string.Empty;
+
+        public string? Description { get; set; }
     };
     
     InputModel Model { get; set; } = new();
     bool isLoading = true;
-    IamRole? role;
+    IamRole? _role;
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
         
-        role = await RoleManager.FindByIdAsync(Id.ToString());
+        _role = await RoleManager.FindByIdAsync(Id.ToString());
         
-        if (role is null)
+        if (_role is null)
         {
             NavigationManager.NavigateTo("/roles");
             return;
         }
         
-        Model.Name = role.Name ?? string.Empty;
+        Model.Name = _role.Name ?? string.Empty;
+        Model.Description = _role.Description;
         isLoading = false;
     }
 
     async Task Submit()
     {
-        if (role is null) return;
+        if (_role is null) return;
         
-        role.Name = Model.Name;
-        role.NormalizedName = Model.Name.ToUpperInvariant();
-        role.ModifiedOn = DateTimeOffset.Now;
-        role.ModifiedBy = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User.FindFirstValue(ClaimTypes.NameIdentifier);
+        _role.Name = Model.Name;
+        _role.Description = Model.Description;
+        _role.NormalizedName = Model.Name.ToUpperInvariant();
+        _role.ModifiedOn = DateTimeOffset.Now;
+        _role.ModifiedBy = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User.FindFirstValue(ClaimTypes.NameIdentifier);
         
-        var result = await RoleManager.UpdateAsync(role);
+        var result = await RoleManager.UpdateAsync(_role);
         
         if (!result.Succeeded)
             return;
