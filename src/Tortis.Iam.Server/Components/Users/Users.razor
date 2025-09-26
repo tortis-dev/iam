@@ -45,7 +45,7 @@
 @code {
     IQueryable<IamUser> _users = default!;
     readonly PaginationState _pagination = new() { ItemsPerPage = 10 };
-    FluentDataGrid<IamUser> _usersGrid;
+    FluentDataGrid<IamUser> _usersGrid = default!; // set implicitly by @ref
     
     protected override async Task OnInitializedAsync()
     {
