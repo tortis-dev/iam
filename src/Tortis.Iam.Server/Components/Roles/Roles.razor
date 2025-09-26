@@ -46,7 +46,7 @@
         var deleteResult = await RoleManager.DeleteAsync(role);
         if (deleteResult.Succeeded)
         {
-            await DialogService.ShowInfoAsync($"{role.Name}  has been deleted.");
+            await DialogService.ShowInfoAsync($"{role.Name} has been deleted.");
             await _rolesGrid.RefreshDataAsync();
         }
         else
