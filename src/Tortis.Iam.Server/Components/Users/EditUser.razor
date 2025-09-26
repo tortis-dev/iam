@@ -126,8 +126,13 @@
         // Crazy verbosity to make the compiler and analyzers happy with the nullable BS.
         var existingUser = await UserManager.FindByIdAsync(UserId.ToString());
         if (existingUser is null)
-            return; //TODO: handle the case where the user is not found.
-
+        {
+            var dialog = await DialogService.ShowErrorAsync("User does not exist.");
+            await dialog.Result;
+            NavigationManager.NavigateTo("/users");
+            return; //unreachable but makes the compiler and analyzers happy.
+        }
+        
         _user = existingUser;
 
         _model = new InputModel

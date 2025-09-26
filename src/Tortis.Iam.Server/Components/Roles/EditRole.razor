@@ -31,7 +31,7 @@ else
                     <FluentValidationMessage For="() => Model.Name"></FluentValidationMessage>
                     <FluentTextArea @bind-Value="Model.Description" Label="Description" Style="width: 100%"/>
                     <FluentStack Orientation="Orientation.Horizontal">
-                        <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent" Disabled="@_saveButtonDisabled">Save</FluentButton>
+                        <FluentButton Loading="_saving" Type="ButtonType.Submit" Appearance="Appearance.Accent" Disabled="@_saveButtonDisabled">Save</FluentButton>
                         <FluentButton OnClick="@Discard" Disabled="@_saveButtonDisabled">Discard</FluentButton>
                     </FluentStack>
                 </FluentStack>
@@ -70,7 +70,7 @@ else
     };
     
     InputModel Model { get; set; } = new();
-    EditContext _editContext;
+    EditContext _editContext = default!;
     bool _isLoading = true;
     bool _saving;
     bool _saveButtonDisabled;
@@ -87,8 +87,10 @@ else
         
         if (_role is null)
         {
+            var dialog = await DialogService.ShowErrorAsync("Role does not exist.");
+            await dialog.Result;
             NavigationManager.NavigateTo("/roles");
-            return;
+            return; //unreachable but makes the compiler and analyzers happy.
         }
         
         Model.Name = _role.Name ?? string.Empty;
@@ -104,6 +106,7 @@ else
 
     async Task Submit()
     {
+        _saving = true;
         _saveButtonDisabled = true;
         if (_role is null) return;
         
@@ -117,8 +120,8 @@ else
         
         if (!result.Succeeded)
             return;
-        
-        NavigationManager.NavigateTo("/roles");
+
+        _saving = false;
     }
 
     async Task RemoveMemberAsync(IamUser user)
