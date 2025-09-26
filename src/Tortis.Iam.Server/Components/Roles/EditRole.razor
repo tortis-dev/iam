@@ -75,7 +75,7 @@ else
     bool _saving;
     bool _saveButtonDisabled;
     
-    IamRole? _role;
+    IamRole _role = default!;
     IQueryable<IamUser>? _members;
 
     protected override async Task OnInitializedAsync()
@@ -83,15 +83,15 @@ else
         await base.OnInitializedAsync();
 
         _saveButtonDisabled = true;
-        _role = await RoleManager.FindByIdAsync(Id.ToString());
-        
-        if (_role is null)
+        var exitingRole = await RoleManager.FindByIdAsync(Id.ToString());
+        if (exitingRole is null)
         {
             var dialog = await DialogService.ShowErrorAsync("Role does not exist.");
             await dialog.Result;
             NavigationManager.NavigateTo("/roles");
             return; //unreachable but makes the compiler and analyzers happy.
-        }
+        } 
+        _role = exitingRole;
         
         Model.Name = _role.Name ?? string.Empty;
         Model.Description = _role.Description;
@@ -108,7 +108,6 @@ else
     {
         _saving = true;
         _saveButtonDisabled = true;
-        if (_role is null) return;
         
         _role.Name = Model.Name;
         _role.Description = Model.Description;
@@ -117,23 +116,16 @@ else
         _role.ModifiedBy = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User.FindFirstValue(ClaimTypes.NameIdentifier);
         
         var result = await RoleManager.UpdateAsync(_role);
-        
-        if (!result.Succeeded)
-        {
-            var errorMarkup = "<ul>";
-            foreach (var error in result.Errors)
-                errorMarkup += "<li>" + error.Description + "</li>";
 
-            errorMarkup += "</ul>";
-            await DialogService.ShowErrorAsync(errorMarkup, title: "Save Failed");
-        }
+        if (!result.Succeeded)
+            await ShowErrorDialogAsync(result);
 
         _saving = false;
     }
 
     async Task RemoveMemberAsync(IamUser user)
     {
-        await UserManager.RemoveFromRoleAsync(user, _role.Name);
+        await UserManager.RemoveFromRoleAsync(user, _role.Name!);
         var members = await UserManager.GetUsersInRoleAsync(_role.Name!);
         _members = members.AsQueryable();
     }
@@ -151,7 +143,7 @@ else
             return;
 
         var membersToAdd = result.Data as IEnumerable<IamUser>;
-        if (membersToAdd is null || _role?.Name is null)
+        if (membersToAdd is null || _role.Name is null)
             return;
         
         foreach (var member in membersToAdd)
@@ -164,8 +156,18 @@ else
     void Discard()
     { 
         _saveButtonDisabled = true;
-        Model.Name = _role?.Name!; // should never be null
+        Model.Name = _role.Name!; // should never be null
         Model.Description = _role?.Description;
+    }
+
+    async Task ShowErrorDialogAsync(IdentityResult result)
+    {
+        var errorMarkup = "<ul>";
+        foreach (var error in result.Errors)
+            errorMarkup += "<li>" + error.Description + "</li>";
+
+        errorMarkup += "</ul>";
+        await DialogService.ShowErrorAsync(errorMarkup, title: "Save Failed");
     }
 
 }

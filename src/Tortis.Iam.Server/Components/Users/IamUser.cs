@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.FluentUI.AspNetCore.Components;
 
 namespace Tortis.Iam.Server.Components.Users;
 
@@ -17,4 +18,10 @@ public sealed class IamUser : IdentityUser<Guid>
 
     public void LockUser() => LockoutEnd = DateTimeOffset.MaxValue;
     public void UnlockUser() => LockoutEnd = DateTimeOffset.MinValue;
+
+    public override string ToString()
+    {
+        var fullName = $"{GivenName} {FamilyName}";
+        return string.IsNullOrWhiteSpace(fullName) ? UserName! : fullName;
+    }
 }
