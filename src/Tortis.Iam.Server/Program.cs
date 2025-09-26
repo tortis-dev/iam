@@ -210,7 +210,7 @@ try
             if (settings.RequirePkceGlobally) options.RequireProofKeyForCodeExchange();
             if (settings.EnableHybridFlow) options.AllowHybridFlow();
             if (settings.EnableRefreshTokenFlow) options.AllowRefreshTokenFlow();
-
+            
             if (!settings.EnableAccessTokenEncryption)
                 options.DisableAccessTokenEncryption();
 
@@ -219,7 +219,7 @@ try
                 options.AddDevelopmentEncryptionCertificate(); //Data Encryption
                 options.AddDevelopmentSigningCertificate();
             }
-
+            
             options.UseAspNetCore()
                 .EnableTokenEndpointPassthrough()
                 .EnableAuthorizationEndpointPassthrough()

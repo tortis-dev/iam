@@ -6,10 +6,19 @@ using Microsoft.AspNetCore.Mvc;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 
+using Tortis.Iam.Server.Components.Users;
+
 namespace Tortis.Iam.Server.Components.OpenIdConnect;
 
 public class TokenEndpointController : ControllerBase
 {
+    readonly IamUserManager _iamUserManager;
+
+    public TokenEndpointController(IamUserManager iamUserManager)
+    {
+        _iamUserManager = iamUserManager;
+    }
+
     /// <summary>
     /// To obtain an Access Token, an ID Token, and optionally a Refresh Token, the RP (Client) sends a Token Request to
     /// the Token Endpoint to obtain a Token Response, as described in Section 3.2 of OAuth 2.0 [RFC6749], when using
@@ -53,11 +62,19 @@ public class TokenEndpointController : ControllerBase
         {
             // Retrieve the claims principal stored in the authorization code
             claimsPrincipal = (await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme)).Principal;
+            // var user = await _iamUserManager.FindByIdAsync(claimsPrincipal.GetClaim(ClaimTypes.NameIdentifier));
+            // var roles = await _iamUserManager.GetRolesAsync(user);
+            // foreach (var role in roles)
+            //     claimsPrincipal.AddClaim(OpenIddictConstants.Claims.Role, role);
         }
         else if (request.IsRefreshTokenGrantType())
         {
             // Retrieve the claims principal stored in the refresh token.
             claimsPrincipal = (await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme)).Principal;
+            // var user = await _iamUserManager.GetUserAsync(claimsPrincipal);
+            // var roles = await _iamUserManager.GetRolesAsync(user);
+            // foreach (var role in roles)
+            //     claimsPrincipal.AddClaim(OpenIddictConstants.Claims.Role, role);
         }
         else
         {

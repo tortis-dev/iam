@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 
 namespace Tortis.Iam.Server.Components.Users;
 
-sealed class IamUserManager : UserManager<IamUser>
+public sealed class IamUserManager : UserManager<IamUser>
 {
     public IamUserManager(IUserStore<IamUser> store, IOptions<IdentityOptions> optionsAccessor, IPasswordHasher<IamUser> passwordHasher, IEnumerable<IUserValidator<IamUser>> userValidators, IEnumerable<IPasswordValidator<IamUser>> passwordValidators, ILookupNormalizer keyNormalizer, IdentityErrorDescriber errors, IServiceProvider services, ILogger<UserManager<IamUser>> logger) : base(store, optionsAccessor, passwordHasher, userValidators, passwordValidators, keyNormalizer, errors, services, logger)
     {

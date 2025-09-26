@@ -199,7 +199,7 @@ sealed class SetupDefaultAdmin : BackgroundService
                 OpenIddictConstants.Permissions.ResponseTypes.IdToken,
                 OpenIddictConstants.Permissions.ResponseTypes.IdTokenToken,
             },
-            RedirectUris = { new Uri("uri:signin"), new Uri("https://localhost:5001/signin-oidc") },
+            RedirectUris = { new Uri("uri:signin"), new Uri("https://localhost:5001/signin-oidc"), new Uri("https://oauth.pstmn.io/v1/callback") },
         }, stoppingToken);
 
     }
