@@ -14,7 +14,7 @@ Example: An ASP Net Core MVC application is also a resource.
 
 ### Resource
 
-A resource is something you to protect that is to be acessed by clients/applications. 
+A resource is something you to protect that is to be accessed by clients/applications. 
 This is usually an API (e.g. microservice), but could also be a database, message queue, etc.
 
 ### Scope
@@ -64,7 +64,7 @@ iterate on during development and should be able to support 100's, if not 1,000'
 - [ ] PostgreSQL
 - [ ] MySQL
 
-While other drivers are available for EF, OpenIdDict uses Quartz.NET which only supports the databases above.
+While other drivers are available for EF, OpenIddict uses Quartz.NET which only supports the databases above.
 [https://www.quartz-scheduler.net/documentation/quartz-3.x/configuration/reference.html#quartz-jobstore-driverdelegatetype](https://www.quartz-scheduler.net/documentation/quartz-3.x/configuration/reference.html#quartz-jobstore-driverdelegatetype)
 
 ## Third Party vs Build From Scratch
@@ -107,7 +107,7 @@ This mechanism could also be used to configure Federation?
 The complete application is licensed under GPL-3. Libraries delivered for devs to create their own IAM solution will be
 licensed under Apache-2 should that day come.
 
-OpenIDDict is licensed under Apache-2 (https://github.com/openiddict/openiddict-core/blob/dev/LICENSE.md)
+OpenIddict is licensed under Apache-2 (https://github.com/openiddict/openiddict-core/blob/dev/LICENSE.md)
 
 AspNet Core Identity is licensed under MIT (https://github.com/dotnet/aspnetcore/blob/main/LICENSE.txt)
 
