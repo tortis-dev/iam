@@ -142,15 +142,16 @@ else
         });
         var result = await dialog.Result;
         if (result.Cancelled)
-        {
             return;
-        }
 
         var membersToAdd = result.Data as IEnumerable<IamUser>;
+        if (membersToAdd is null || _role?.Name is null)
+            return;
+        
         foreach (var member in membersToAdd)
             await UserManager.AddToRoleAsync(member, _role.Name);
 
-        var members = await UserManager.GetUsersInRoleAsync(_role.Name!);
+        var members = await UserManager.GetUsersInRoleAsync(_role.Name);
         _members = members.AsQueryable();
     }
 
