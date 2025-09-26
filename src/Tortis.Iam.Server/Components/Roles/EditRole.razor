@@ -119,7 +119,14 @@ else
         var result = await RoleManager.UpdateAsync(_role);
         
         if (!result.Succeeded)
-            return;
+        {
+            var errorMarkup = "<ul>";
+            foreach (var error in result.Errors)
+                errorMarkup += "<li>" + error.Description + "</li>";
+
+            errorMarkup += "</ul>";
+            await DialogService.ShowErrorAsync(errorMarkup, title: "Save Failed");
+        }
 
         _saving = false;
     }
