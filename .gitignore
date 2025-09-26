@@ -403,4 +403,7 @@ riderModule.iml
 *.db
 *.db-*
 
+# Draw.io
 *.bkp
+*.dtmp
+
