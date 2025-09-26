@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
@@ -18,6 +19,7 @@ public class TokenEndpointController : ControllerBase
     /// https://www.rfc-editor.org/rfc/rfc6749.html#section-3.2
     /// </summary>
     [HttpPost(TortisOpenIdConstants.TOKEN_ENDPOINT)]
+    [AllowAnonymous]
     public async Task<IActionResult> Token()
     {
         // Note:

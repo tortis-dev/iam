@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using OpenIddict.Abstractions;
@@ -28,6 +29,7 @@ public class AuthorizeEndpointController : ControllerBase
     [HttpGet(TortisOpenIdConstants.AUTHORIZATION_ENDPOINT)]
     [HttpPost(TortisOpenIdConstants.AUTHORIZATION_ENDPOINT)]
     [IgnoreAntiforgeryToken]
+    [AllowAnonymous]
     public async Task<IActionResult> Authorize()
     {
         var request = HttpContext.GetOpenIddictServerRequest() ??

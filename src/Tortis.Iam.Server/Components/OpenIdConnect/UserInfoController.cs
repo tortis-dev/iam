@@ -44,7 +44,11 @@ public class UserInfoController : ControllerBase
 
         try
         {
-            var user = await _userManager.FindByNameAsync(User.Identity.Name);
+            var userId = User.GetClaim(OpenIddictConstants.Claims.Subject);
+            if (userId is null)
+                return BadRequest(new { error = "invalid_token" });
+            
+            var user = await _userManager.FindByIdAsync(userId);
             
             // This _should_ never happen. The edge case would be the user was deleted while the token was still valid, 
             // or the token was tampered with and somehow passed validation.
@@ -54,18 +58,22 @@ public class UserInfoController : ControllerBase
             
             return Ok(new
             {
-                iss = User.Claims.FirstOrDefault(c => c.Type == OpenIddictConstants.Claims.Issuer)?.Value,
+                iss = User.GetClaim(OpenIddictConstants.Claims.Issuer),
                 aud =
-                    User.Claims.FirstOrDefault(c => c.Type == OpenIddictConstants.Claims.Audience)?.Value ??
-                    User.Claims.FirstOrDefault(c => c.Type == OpenIddictConstants.Claims.ClientId)?.Value,
-                sub = User.Claims.FirstOrDefault(c => c.Type == OpenIddictConstants.Claims.Subject)?.Value,
-                name = User.Identity.Name,
-                preferred_username = user?.UserName,
-                email = user?.Email,
-                email_verified = user?.EmailConfirmed,
-                phone_number = user?.PhoneNumber,
-                phone_number_verified = user?.PhoneNumberConfirmed,
-                updated_at = user?.ModifiedOn?.ToUnixTimeSeconds() ?? user?.CreatedOn.ToUnixTimeSeconds()
+                    User.GetClaim(OpenIddictConstants.Claims.Audience) ??
+                    User.GetClaim(OpenIddictConstants.Claims.ClientId) ??
+                    User.GetClaim(OpenIddictConstants.Claims.Issuer),
+                sub = User.GetClaim(OpenIddictConstants.Claims.Subject),
+                name = user.ToString(),
+                preferred_username = user.UserName,
+                email = user.Email,
+                email_verified = user.EmailConfirmed,
+                phone_number = user.PhoneNumber,
+                phone_number_verified = user.PhoneNumberConfirmed,
+                updated_at = user.ModifiedOn?.ToUnixTimeSeconds() ?? user.CreatedOn.ToUnixTimeSeconds(),
+                given_name = user.GivenName,
+                family_name = user.FamilyName,
+                
             });
         }
         catch (Exception ex)
