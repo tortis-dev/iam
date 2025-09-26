@@ -105,7 +105,7 @@ This mechanism could also be used to configure Federation?
 ## License
 
 The complete application is licensed under GPL-3. Libraries delivered for devs to create their own IAM solution will be
-licensed under Apache-2.
+licensed under Apache-2 should that day come.
 
 OpenIDDict is licensed under Apache-2 (https://github.com/openiddict/openiddict-core/blob/dev/LICENSE.md)
 
