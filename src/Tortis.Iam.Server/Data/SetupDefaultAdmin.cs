@@ -53,6 +53,10 @@ sealed class SetupDefaultAdmin : BackgroundService
     async Task CreateAdministratorRoleAsync(IServiceProvider container)
     {
         var roleManager = container.GetRequiredService<RoleManager<IamRole>>();
+        var existingRole = await roleManager.FindByNameAsync(Authorization.ADMINISTRATORS);
+        if (existingRole is not null)
+            return;
+        
         var addAdministratorsResult = await roleManager.CreateAsync(new IamRole(Authorization.ADMINISTRATORS)
         {
             Description = "Administrators have full access to the system.",

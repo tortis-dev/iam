@@ -1,0 +1,58 @@
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using Tortis.Iam.Server.Components.Users
+@implements IDialogContentComponent
+
+@inject UserManager<IamUser> UserManager
+
+<FluentSearch @bind-Value="@_searchTerm" @bind-Value:after="@Search" Placeholder="Search by username" />
+<FluentDataGrid Items="@_users" Virtualize="true" Pagination="@_pagination">
+    <SelectColumn 
+        SelectMode="DataGridSelectMode.Multiple"
+        @bind-SelectedItems="@_selectedUsers"/>
+    <PropertyColumn Property="p => p.UserName" Filtered="true"/>
+    <PropertyColumn Property="p=>p.Name"/>
+    <PropertyColumn Property="p=>p.Email"/>
+</FluentDataGrid>
+<FluentPaginator State="@_pagination"/>
+<FluentDialogFooter>
+    <FluentButton Appearance="Appearance.Accent" OnClick="@AssignAsync">Assign</FluentButton>
+    <FluentButton Appearance="Appearance.Neutral" OnClick="@CancelAsync">Cancel</FluentButton>
+</FluentDialogFooter>
+
+@code {
+    [CascadingParameter]
+    public FluentDialog Dialog { get; set; } = default!;
+
+    readonly PaginationState _pagination = new() { ItemsPerPage = 10 } ;
+    IEnumerable<IamUser> _selectedUsers = new List<IamUser>();
+    string? _searchTerm;
+    IQueryable<IamUser> _users = default!;
+
+    protected override void OnInitialized()
+    {
+        _users = UserManager.Users;
+    }
+
+    async Task CancelAsync()
+    {
+        await Dialog.CancelAsync();
+    }
+
+    async Task AssignAsync()
+    {
+        await Dialog.CloseAsync(_selectedUsers);
+    }
+
+    void Search()
+    {
+        if (string.IsNullOrWhiteSpace(_searchTerm))
+        {
+            _users = UserManager.Users;
+            return;
+        }
+
+        var normalizedSearchTerm = _searchTerm.Trim().ToUpperInvariant() + "%";
+        _users = UserManager.Users.Where(u => EF.Functions.Like(u.NormalizedUserName, normalizedSearchTerm));
+    }
+}
