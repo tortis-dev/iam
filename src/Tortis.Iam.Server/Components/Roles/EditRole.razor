@@ -1,12 +1,9 @@
 @page "/roles/{id:guid}"
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
-@using System.Runtime.InteropServices.JavaScript
 @using System.Security.Claims
-@using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Identity
 @using Tortis.Iam.Server.Components.Users
-@using Tortis.Iam.Server.Data
 
 @inject RoleManager<IamRole> RoleManager
 @inject UserManager<IamUser> UserManager
@@ -158,8 +155,8 @@ else
     void Discard()
     { 
         _saveButtonDisabled = true;
-        Model.Name = _role.Name;
-        Model.Description = _role.Description;
+        Model.Name = _role?.Name!; // should never be null
+        Model.Description = _role?.Description;
     }
 
 }
