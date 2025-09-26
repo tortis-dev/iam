@@ -248,12 +248,14 @@ try
         .AddEntityFrameworkStores<IamDbContext>()
         .AddSignInManager()
         .AddDefaultTokenProviders();
-    builder.Services
-        .Replace(ServiceDescriptor.Scoped<IUserClaimsPrincipalFactory<IamUser>, IamUserClaimsPrincipalFactory>());
 
     // Application services
-    builder.Services.AddHostedService<SetupDefaultAdmin>();
-
+    builder.Services
+        .AddHostedService<SetupDefaultAdmin>()
+        .Replace(ServiceDescriptor.Scoped<IUserClaimsPrincipalFactory<IamUser>, IamUserClaimsPrincipalFactory>())
+        .AddScoped<IamUserManager>()
+        .AddScoped<IamRoleManager>();
+    
     var app = builder.Build();
 
     app.UseExceptionHandler(new ExceptionHandlerOptions

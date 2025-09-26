@@ -1,8 +1,7 @@
 @page "/users"
 @rendermode InteractiveServer
-@using Microsoft.AspNetCore.Identity
 
-@inject UserManager<IamUser> UserManager;
+@inject IamUserManager UserManager;
 @inject NavigationManager Navigation;
 @inject IDialogService DialogService;
 

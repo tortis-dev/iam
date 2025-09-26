@@ -1,9 +1,8 @@
 @page "/roles"
 @rendermode InteractiveServer
-@using Microsoft.AspNetCore.Identity
 
 @inject NavigationManager Navigation;
-@inject RoleManager<IamRole> RoleManager;
+@inject IamRoleManager RoleManager;
 @inject IDialogService DialogService;
 
 <PageTitle>Roles</PageTitle>
