@@ -286,8 +286,6 @@ try
     app.UseHttpsRedirection();
     app.UseStaticFiles();
 
-    //app.UseAuthentication();
-    //app.UseAuthorization();
     app.UseAntiforgery();
     
     app.MapControllers();
