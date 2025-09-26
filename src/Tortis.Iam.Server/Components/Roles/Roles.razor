@@ -6,8 +6,6 @@
 @inject RoleManager<IamRole> RoleManager;
 @inject IDialogService DialogService;
 
-@attribute [Authorize]
-
 <PageTitle>Roles</PageTitle>
 <h3>Roles</h3>
 <FluentButton Appearance="Appearance.Accent" OnClick="@(() => Navigation.NavigateTo("/add-role"))">New Role</FluentButton>

@@ -110,3 +110,8 @@ licensed under Apache-2.
 OpenIDDict is licensed under Apache-2 (https://github.com/openiddict/openiddict-core/blob/dev/LICENSE.md)
 
 AspNet Core Identity is licensed under MIT (https://github.com/dotnet/aspnetcore/blob/main/LICENSE.txt)
+
+## Items of Note
+
+There is some janky null handling and forgiving in the code because AspNet Core Identity has required fields--i.e.
+Username, Role Name--marked as nullable in both code and the database. All the more reason to abstract away Identity.
