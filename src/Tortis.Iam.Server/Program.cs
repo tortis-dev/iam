@@ -1,7 +1,9 @@
 using System.Reflection;
+using System.Resources;
 
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.FluentUI.AspNetCore.Components;
@@ -48,9 +50,7 @@ try
     // Configure Kestrel
     builder.WebHost.ConfigureKestrel(options =>
     {
-        options.AddServerHeader =
-            false; // Remove the default "Server" header so attackers can't identify the server as Kestrel.
-        options.ConfigureEndpointDefaults(endpoint => endpoint.UseHttps());
+        options.AddServerHeader = false; // Remove the default "Server" header so attackers can't identify the server as Kestrel.
     });
 
     if (builder.Environment.IsDevelopment())
@@ -168,6 +168,41 @@ try
     builder.Services.AddQuartz(options =>
     {
         options.UseSimpleTypeLoader();
+        // if (databaseProvider == "sqlite")
+        // {
+        //     const string connectionString = "Filename=./Data/quartz.db";
+        //     
+        //     if (!File.Exists("./Data/quartz.db"))
+        //     {
+        //         // Bootstrap Quartz for sqlite
+        //         logger.Information("Initializing Quartz database...");
+        //         var assembly = Assembly.GetExecutingAssembly();
+        //         var resourceName = assembly.GetManifestResourceNames()
+        //             .FirstOrDefault(n => n.EndsWith("qrtz_sqlite_schema.sql", StringComparison.OrdinalIgnoreCase));
+        //         if (resourceName is null)
+        //             throw new InvalidOperationException("Embedded SQL resource not found.");
+        //
+        //         string sql;
+        //         using (var stream = assembly.GetManifestResourceStream(resourceName)!)
+        //         using (var reader = new StreamReader(stream))
+        //         {
+        //             sql = reader.ReadToEnd();
+        //         }
+        //
+        //         using (var cn = new SqliteConnection(connectionString))
+        //         {
+        //             cn.Open();
+        //             using (SqliteCommand sqliteCommand = new SqliteCommand(sql, cn))
+        //                 sqliteCommand.ExecuteNonQuery();
+        //         }
+        //     }
+        //
+        //     options.UsePersistentStore(store =>
+        //     {
+        //         store.UseSystemTextJsonSerializer();
+        //         store.UseSQLite(connectionString);
+        //     });
+        // }
         options.UseInMemoryStore();
         // options.UsePersistentStore(store =>
         // {
@@ -273,7 +308,27 @@ try
             return Task.CompletedTask;
         }
     });
-    app.MapHealthChecks("/health").AllowAnonymous();
+    
+    // We want health checks available on http, but everything else should be https.
+    app.Use(async (context, next) =>
+    {
+        // Skip HTTPS redirect for /health
+        if (context.Request.Path.StartsWithSegments("/health"))
+        {
+            await next();
+            return;
+        }
+        
+        // If HTTP, redirect to HTTPS
+        if (!context.Request.IsHttps)
+        {
+            var withHttps = $"https://{context.Request.Host}{context.Request.Path}{context.Request.QueryString}";
+            context.Response.Redirect(withHttps, permanent: false);
+            return;
+        }
+        
+        await next();
+    });
     
     // Configure the HTTP request pipeline.
     if (!app.Environment.IsDevelopment())
@@ -283,11 +338,14 @@ try
         app.UseHsts();
     }
 
-    app.UseHttpsRedirection();
+    //app.UseHttpsRedirection();
     app.UseStaticFiles();
 
+    app.UseAuthentication();
+    app.UseAuthorization();
     app.UseAntiforgery();
     
+    app.MapHealthChecks("/health");
     app.MapControllers();
     app.MapRazorComponents<App>().AddInteractiveServerRenderMode().RequireAuthorization();
     app.MapAdditionalIdentityEndpoints();
