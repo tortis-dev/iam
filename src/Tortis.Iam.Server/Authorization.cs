@@ -22,7 +22,6 @@ public static class Authorization
     {
         builder.Services.AddAuthorization(options =>
         {
-            options.FallbackPolicy = options.DefaultPolicy;
             options.AddPolicy(ADMINISTRATORS, policy => policy.RequireRole(ADMINISTRATORS));
             options.AddPolicy(SECURITY_ADMINISTRATORS, policy => policy.RequireRole(ADMINISTRATORS, SECURITY_ADMINISTRATORS));
             options.AddPolicy(OIDC_ADMINISTRATORS,  policy => policy.RequireRole(ADMINISTRATORS, OIDC_ADMINISTRATORS));
