@@ -144,40 +144,35 @@ try
 
     // Database
     // TODO: Make database settings a strong type config.
-    var databaseProvider = builder.Configuration.GetValue<string>("DatabaseProvider") ?? "Sqlite";
-    string appConnectionString = string.Empty;
-    if (string.Equals(databaseProvider, "sqlite", StringComparison.OrdinalIgnoreCase))
+    var databaseProvider = builder.Configuration.GetValue<string>("DatabaseProvider") ?? "sqlite";
+    string appConnectionString;
+    if (string.Equals(databaseProvider, "inmemory", StringComparison.OrdinalIgnoreCase))
+    {
+        appConnectionString = "Filename=:memory:";
+    }
+    else if (string.Equals(databaseProvider, "sqlite", StringComparison.OrdinalIgnoreCase))
     {
         appConnectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
                               $"Filename={DEFAULT_SQLITE_DATABASE_PATH}";
     }
     else
     {
-        appConnectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
-                              throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+        throw new ApplicationException("Unsupported database provider.");
     }
-
-    var databaseSchema = builder.Configuration.GetValue<string>("DatabaseSchema") ?? "iam";
 
     builder.Services.AddDbContext<IamDbContext>(options =>
     {
         if (string.Equals(databaseProvider, "inmemory", StringComparison.OrdinalIgnoreCase))
         {
-            var connection = new SqliteConnection($"Filename=:memory:");
-            options.UseSqlite(connection);
-        }
-        else if (databaseProvider == "Sqlite")
-        {
-            options.UseSqlite(appConnectionString,
-                sqlite => sqlite.MigrationsHistoryTable(IamDbContext.HISTORY_TABLE_NAME));
+            var connection = new SqliteConnection(appConnectionString);
+            connection.Open();
+            options.UseSqlite(connection, sqlite => sqlite.MigrationsHistoryTable(IamDbContext.HISTORY_TABLE_NAME));
         }
         else
         {
-            if (databaseProvider == "SqlServer")
-                options.UseSqlServer(appConnectionString,
-                    sql => sql.MigrationsHistoryTable(IamDbContext.HISTORY_TABLE_NAME, databaseSchema));
+            options.UseSqlite(appConnectionString, sqlite => sqlite.MigrationsHistoryTable(IamDbContext.HISTORY_TABLE_NAME));
         }
-
+        
         // Use OpenIdDict entities with Guid ID type
         options.UseOpenIddict<Guid>();
     });
@@ -195,20 +190,10 @@ try
             options.UsePersistentStore(store =>
             {
                 store.UseSystemTextJsonSerializer();
-                if (string.Equals(databaseProvider, "sqlite", StringComparison.OrdinalIgnoreCase))
+                store.UseSQLite(sqlite =>
                 {
-                    store.UseSQLite($"Filename={DEFAULT_SQLITE_QUARTZ_DATABASE_PATH}");
-                }
-                else if (string.Equals(databaseProvider, "sqlserver", StringComparison.OrdinalIgnoreCase))
-                {
-                    store.UseClustering();
-                    store.UseSqlServer(sql =>
-                    {
-
-                        sql.ConnectionString = appConnectionString;
-                        sql.TablePrefix = $"{databaseSchema}.qrtz_";
-                    });
-                }
+                    sqlite.ConnectionString = $"Filename={DEFAULT_SQLITE_QUARTZ_DATABASE_PATH}";
+                });
             });
         }
     }).AddQuartzHostedService(options => options.WaitForJobsToComplete = true);

@@ -2,6 +2,64 @@
 
 This project aims to be a FOSS IAM solution.
 
+## Roadmap
+
+### Phases
+
+#### Release milestone 1
+[ ] Make it work—just get a basic prototype fully functional.
+[ ] Make it right—tidy up the code, make it look good, make it work well, make it secure.
+
+#### Release milestone 2
+[ ] Make it fast—add additional database support beyond SQLite and focus on performance and scalerability.
+
+#### Release milestone 3
+[ ] Financial API compliant—make it compliant with the Financial API Baseline.
+
+### Features
+
+- [ ] OpenIdConnect/OAuth2.0 Flows and Grant Types
+    - [x] Client Credentials
+    - [x] Authorization Code + PKCE
+    - [X] Refresh Token
+    - [ ] Resource Owner Password
+    - [ ] Implicit
+    - [X] Hybrid
+    - [ ] Delegation/On-Behalf-Of (https://datatracker.ietf.org/doc/html/rfc8693)
+    - [ ] Device Flow
+- [x] Scopes
+- [x] Local logins/users
+    - [x] MFA
+- [ ] External logins and SSO
+    - [ ] LDAP
+    - [x] OpenIdConnect Federation
+    - [ ] SAML Federation
+- [x] Roles/RBAC
+- [ ] Financial API Baseline compliant (maybe certified) (https://openid.net/wg/fapi/)
+- [ ] SIEM auditing events
+- [ ] Local auditing
+
+### Database Support
+
+Thanks to Entity Framework Core, multiple database platforms can be supported. SQLite will be first as it is easy to
+iterate on during development and should be able to support 100's, if not 1,000's of users in production.
+
+- [X] Sqlite
+- [ ] Microsoft SQL Server
+- [ ] Oracle
+- [ ] PostgreSQL
+- [ ] MySQL
+
+While other drivers are available for EF, OpenIddict uses Quartz.NET which only supports the databases above.
+[https://www.quartz-scheduler.net/documentation/quartz-3.x/configuration/reference.html#quartz-jobstore-driverdelegatetype](https://www.quartz-scheduler.net/documentation/quartz-3.x/configuration/reference.html#quartz-jobstore-driverdelegatetype)
+
+## Certificates
+
+- HTTPS certificate
+- OpenIdConnect certificate - Token signing
+- Master Certificate - generate data protection keys
+
+
 ## Concepts
 
 ### Application/Client
@@ -29,43 +87,6 @@ A user is a person that uses an application to access resources.
 
 A role is a permission that a user can request.
 
-
-## Features
-
-- [ ] OpenIdConnect/OAuth2.0 Flows and Grant Types
-  - [x] Client Credentials
-  - [x] Authorization Code + PKCE
-  - [X] Refresh Token
-  - [ ] Resource Owner Password
-  - [ ] Implicit
-  - [X] Hybrid
-  - [ ] Delegation/On-Behalf-Of (https://datatracker.ietf.org/doc/html/rfc8693)
-  - [ ] Device Flow
-- [x] Scopes
-- [x] Local logins/users
-  - [x] MFA
-- [ ] External logins and SSO
-  - [ ] LDAP
-  - [x] OpenIdConnect Federation
-  - [ ] SAML Federation
-- [x] Roles/RBAC
-- [ ] Financial API Baseline compliant (maybe certified) (https://openid.net/wg/fapi/)
-- [ ] SIEM auditing events
-- [ ] Local auditing
-
-## Database Support
-
-Thanks to Entity Framework Core, multiple database platforms can be supported. SQLite will be first as it is easy to
-iterate on during development and should be able to support 100's, if not 1,000's of users in production.
-
-- [X] Sqlite
-- [ ] Microsoft SQL Server
-- [ ] Oracle
-- [ ] PostgreSQL
-- [ ] MySQL
-
-While other drivers are available for EF, OpenIddict uses Quartz.NET which only supports the databases above.
-[https://www.quartz-scheduler.net/documentation/quartz-3.x/configuration/reference.html#quartz-jobstore-driverdelegatetype](https://www.quartz-scheduler.net/documentation/quartz-3.x/configuration/reference.html#quartz-jobstore-driverdelegatetype)
 
 ## Third Party vs Build From Scratch
 
