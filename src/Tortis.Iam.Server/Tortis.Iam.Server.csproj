@@ -45,4 +45,8 @@
     <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components.DataGrid.EntityFrameworkAdapter" Version="4.12.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Data\qrtz_sqlite_schema.sql" />
+  </ItemGroup>
+
 </Project>

@@ -3,6 +3,7 @@ using System.Resources;
 
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Routing.Constraints;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -29,10 +30,12 @@ using Tortis.Iam.Server.Components.Roles;
 using Tortis.Iam.Server.Components.Users;
 using Tortis.Iam.Server.Data;
 
-const string consoleLogTemplate = "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties} {NewLine}{Exception}";
+const string CONSOLE_LOG_TEMPLATE = "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties} {NewLine}{Exception}";
+const string DEFAULT_SQLITE_DATABASE_PATH = "./Data/iam.db";
+const string DEFAULT_SQLITE_QUARTZ_DATABASE_PATH = "./Data/iam_quartz.db";
 
 // A bare minimum bootstrap logger to capture any exceptions thrown during startup.
-var logger = new LoggerConfiguration().WriteTo.Console(outputTemplate: consoleLogTemplate).CreateBootstrapLogger();
+var logger = new LoggerConfiguration().WriteTo.Console(outputTemplate: CONSOLE_LOG_TEMPLATE).CreateBootstrapLogger();
 
 try
 {
@@ -46,11 +49,12 @@ try
         .AddEnvironmentVariables("TORTIS__IAM__") // We want to use a custom prefix for environment variables.
         .AddCommandLine(args) // We still want command line arguments to override environment variables.
         .AddTestConfiguration(); // Unit tests can use this to flow state to the main program and change configuration.
-    
+
     // Configure Kestrel
     builder.WebHost.ConfigureKestrel(options =>
     {
-        options.AddServerHeader = false; // Remove the default "Server" header so attackers can't identify the server as Kestrel.
+        // Remove the default "Server" header so attackers can't identify the server as Kestrel.
+        options.AddServerHeader = false; 
     });
 
     if (builder.Environment.IsDevelopment())
@@ -71,25 +75,25 @@ try
             options.MaxAge = TimeSpan.FromDays(60);
         });
     }
-    
+
     // Logging, monitoring, and telemetry
     builder.Logging.ClearProviders();
-    builder.Services.AddSerilog(loggerConfiguration => 
-    loggerConfiguration
-        .ReadFrom.Configuration(builder.Configuration)
-        .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
-        .Enrich.WithProperty("Application", builder.Environment.ApplicationName)
-        .Enrich.WithProperty("Version", version)
-        .Enrich.WithProperty("Environment", builder.Environment.EnvironmentName)
-        .Enrich.FromLogContext()
-        .Enrich.WithSpan()
-        .WriteTo.Async(l => l.Console(outputTemplate: consoleLogTemplate))
-        .WriteTo.Async(l => l.OpenTelemetry(resourceAttributes: new Dictionary<string, object>()
-        {
-            { "service.name", builder.Environment.ApplicationName },
-            { "service.version", version },
-            { "service.instance.id", instanceId }
-        })));
+    builder.Services.AddSerilog(loggerConfiguration =>
+        loggerConfiguration
+            .ReadFrom.Configuration(builder.Configuration)
+            .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+            .Enrich.WithProperty("Application", builder.Environment.ApplicationName)
+            .Enrich.WithProperty("Version", version)
+            .Enrich.WithProperty("Environment", builder.Environment.EnvironmentName)
+            .Enrich.FromLogContext()
+            .Enrich.WithSpan()
+            .WriteTo.Async(l => l.Console(outputTemplate: CONSOLE_LOG_TEMPLATE))
+            .WriteTo.Async(l => l.OpenTelemetry(resourceAttributes: new Dictionary<string, object>()
+            {
+                { "service.name", builder.Environment.ApplicationName },
+                { "service.version", version },
+                { "service.instance.id", instanceId }
+            })));
 
     builder.Services.AddHealthChecks();
 
@@ -139,27 +143,41 @@ try
         .AddIdentityCookies();
 
     // Database
+    // TODO: Make database settings a strong type config.
     var databaseProvider = builder.Configuration.GetValue<string>("DatabaseProvider") ?? "Sqlite";
-    
+    string appConnectionString = string.Empty;
+    if (string.Equals(databaseProvider, "sqlite", StringComparison.OrdinalIgnoreCase))
+    {
+        appConnectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
+                              $"Filename={DEFAULT_SQLITE_DATABASE_PATH}";
+    }
+    else
+    {
+        appConnectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
+                              throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+    }
+
+    var databaseSchema = builder.Configuration.GetValue<string>("DatabaseSchema") ?? "iam";
+
     builder.Services.AddDbContext<IamDbContext>(options =>
     {
-        if (databaseProvider == "Sqlite")
+        if (string.Equals(databaseProvider, "inmemory", StringComparison.OrdinalIgnoreCase))
         {
-            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Filename=./Data/iam.db";
-            options.UseSqlite(connectionString, 
+            var connection = new SqliteConnection($"Filename=:memory:");
+            options.UseSqlite(connection);
+        }
+        else if (databaseProvider == "Sqlite")
+        {
+            options.UseSqlite(appConnectionString,
                 sqlite => sqlite.MigrationsHistoryTable(IamDbContext.HISTORY_TABLE_NAME));
         }
         else
         {
-            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
-                                   throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-            var databaseSchema = builder.Configuration.GetValue<string>("DatabaseSchema") ?? "iam";
-            
             if (databaseProvider == "SqlServer")
-                options.UseSqlServer(connectionString,
+                options.UseSqlServer(appConnectionString,
                     sql => sql.MigrationsHistoryTable(IamDbContext.HISTORY_TABLE_NAME, databaseSchema));
         }
-        
+
         // Use OpenIdDict entities with Guid ID type
         options.UseOpenIddict<Guid>();
     });
@@ -168,52 +186,31 @@ try
     builder.Services.AddQuartz(options =>
     {
         options.UseSimpleTypeLoader();
-        // if (databaseProvider == "sqlite")
-        // {
-        //     const string connectionString = "Filename=./Data/quartz.db";
-        //     
-        //     if (!File.Exists("./Data/quartz.db"))
-        //     {
-        //         // Bootstrap Quartz for sqlite
-        //         logger.Information("Initializing Quartz database...");
-        //         var assembly = Assembly.GetExecutingAssembly();
-        //         var resourceName = assembly.GetManifestResourceNames()
-        //             .FirstOrDefault(n => n.EndsWith("qrtz_sqlite_schema.sql", StringComparison.OrdinalIgnoreCase));
-        //         if (resourceName is null)
-        //             throw new InvalidOperationException("Embedded SQL resource not found.");
-        //
-        //         string sql;
-        //         using (var stream = assembly.GetManifestResourceStream(resourceName)!)
-        //         using (var reader = new StreamReader(stream))
-        //         {
-        //             sql = reader.ReadToEnd();
-        //         }
-        //
-        //         using (var cn = new SqliteConnection(connectionString))
-        //         {
-        //             cn.Open();
-        //             using (SqliteCommand sqliteCommand = new SqliteCommand(sql, cn))
-        //                 sqliteCommand.ExecuteNonQuery();
-        //         }
-        //     }
-        //
-        //     options.UsePersistentStore(store =>
-        //     {
-        //         store.UseSystemTextJsonSerializer();
-        //         store.UseSQLite(connectionString);
-        //     });
-        // }
-        options.UseInMemoryStore();
-        // options.UsePersistentStore(store =>
-        // {
-        //     store.UseSystemTextJsonSerializer();
-        //     store.UseClustering();
-        //     if (databaseProvider == "SqlServer") store.UseSqlServer(sql =>
-        //     {
-        //         sql.ConnectionString = connectionString;
-        //         sql.TablePrefix = $"[{databaseSchema}].qrtz_";
-        //     });
-        // });
+        if (string.Equals(databaseProvider, "inmemory", StringComparison.OrdinalIgnoreCase))
+        {
+            options.UseInMemoryStore();
+        }
+        else
+        {
+            options.UsePersistentStore(store =>
+            {
+                store.UseSystemTextJsonSerializer();
+                if (string.Equals(databaseProvider, "sqlite", StringComparison.OrdinalIgnoreCase))
+                {
+                    store.UseSQLite($"Filename={DEFAULT_SQLITE_QUARTZ_DATABASE_PATH}");
+                }
+                else if (string.Equals(databaseProvider, "sqlserver", StringComparison.OrdinalIgnoreCase))
+                {
+                    store.UseClustering();
+                    store.UseSqlServer(sql =>
+                    {
+
+                        sql.ConnectionString = appConnectionString;
+                        sql.TablePrefix = $"{databaseSchema}.qrtz_";
+                    });
+                }
+            });
+        }
     }).AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
 
     // OIDC
@@ -245,7 +242,7 @@ try
             if (settings.RequirePkceGlobally) options.RequireProofKeyForCodeExchange();
             if (settings.EnableHybridFlow) options.AllowHybridFlow();
             if (settings.EnableRefreshTokenFlow) options.AllowRefreshTokenFlow();
-            
+
             if (!settings.EnableAccessTokenEncryption)
                 options.DisableAccessTokenEncryption();
 
@@ -254,7 +251,7 @@ try
                 options.AddDevelopmentEncryptionCertificate(); //Data Encryption
                 options.AddDevelopmentSigningCertificate();
             }
-            
+
             options.UseAspNetCore()
                 .EnableTokenEndpointPassthrough()
                 .EnableAuthorizationEndpointPassthrough()
@@ -277,7 +274,8 @@ try
         .AddIdentityCore<IamUser>(options =>
         {
             //TODO: Default password policy to current NIST/NSA recommendations
-            options.SignIn.RequireConfirmedAccount = builder.Configuration.GetValue<bool>("SignIn.RequireConfirmedAccount");
+            options.SignIn.RequireConfirmedAccount =
+                builder.Configuration.GetValue<bool>("SignIn.RequireConfirmedAccount");
         })
         .AddRoles<IamRole>()
         .AddEntityFrameworkStores<IamDbContext>()
@@ -290,8 +288,50 @@ try
         .Replace(ServiceDescriptor.Scoped<IUserClaimsPrincipalFactory<IamUser>, IamUserClaimsPrincipalFactory>())
         .AddScoped<IamUserManager>()
         .AddScoped<IamRoleManager>();
-    
+
     var app = builder.Build();
+
+    // When using Sqlite (file or :memory:), we want to automatically create the iam databases.
+    // For other databases, we assume the database is created outside of the application.
+    if (string.Equals(databaseProvider, "sqlite", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(databaseProvider, "inmemory", StringComparison.OrdinalIgnoreCase))
+
+    {
+        // Ensure the application database is created. This will only create a new file. It does not perform a migration.
+        using (var scope = app.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<IamDbContext>();
+            dbContext.Database.EnsureCreated();
+        }
+    }
+    if (string.Equals(databaseProvider, "sqlite", StringComparison.OrdinalIgnoreCase))
+    {
+        // Ensure the Quartz database is created. This will only create a new file. It does not perform a migration.
+        if (!File.Exists(DEFAULT_SQLITE_QUARTZ_DATABASE_PATH))
+        {
+            Log.Information("Initializing Quartz database...");
+            var assembly = Assembly.GetExecutingAssembly();
+            var resourceName = assembly.GetManifestResourceNames()
+                .FirstOrDefault(n => n.EndsWith("qrtz_sqlite_schema.sql", StringComparison.OrdinalIgnoreCase));
+            if (resourceName is null)
+                throw new InvalidOperationException("Embedded SQL resource not found.");
+        
+            string sql;
+            using (var stream = assembly.GetManifestResourceStream(resourceName)!)
+            using (var reader = new StreamReader(stream))
+            {
+                sql = reader.ReadToEnd();
+            }
+        
+            using (var cn = new SqliteConnection($"Filename={DEFAULT_SQLITE_QUARTZ_DATABASE_PATH}"))
+            {
+                cn.Open();
+                using (var sqliteCommand = new SqliteCommand(sql, cn))
+                    sqliteCommand.ExecuteNonQuery();
+            }
+            Log.Information("Quartz database initialization complete.");
+        }
+    }
 
     app.UseExceptionHandler(new ExceptionHandlerOptions
     {
