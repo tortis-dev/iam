@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Routing.Constraints;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using Microsoft.FluentUI.AspNetCore.Components;
 using OpenIddict.Abstractions;
 
@@ -15,6 +16,7 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 using Quartz;
+using Quartz.Impl.AdoJobStore;
 
 using Serilog;
 using Serilog.Enrichers.Span;
@@ -148,12 +150,12 @@ try
     string appConnectionString;
     if (string.Equals(databaseProvider, "inmemory", StringComparison.OrdinalIgnoreCase))
     {
-        appConnectionString = "Filename=:memory:";
+        appConnectionString = "Data Source=:memory:";
     }
     else if (string.Equals(databaseProvider, "sqlite", StringComparison.OrdinalIgnoreCase))
     {
         appConnectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
-                              $"Filename={DEFAULT_SQLITE_DATABASE_PATH}";
+                              $"Data Source={DEFAULT_SQLITE_DATABASE_PATH}";
     }
     else
     {
@@ -190,10 +192,7 @@ try
             options.UsePersistentStore(store =>
             {
                 store.UseSystemTextJsonSerializer();
-                store.UseSQLite(sqlite =>
-                {
-                    sqlite.ConnectionString = $"Filename={DEFAULT_SQLITE_QUARTZ_DATABASE_PATH}";
-                });
+                store.UseSQLite($"Data Source={DEFAULT_SQLITE_QUARTZ_DATABASE_PATH}");
             });
         }
     }).AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
@@ -236,6 +235,12 @@ try
                 options.AddDevelopmentEncryptionCertificate(); //Data Encryption
                 options.AddDevelopmentSigningCertificate();
             }
+            else
+            {
+                // TODO: Add production certificates.
+                // options.AddEncryptionCertificate();
+                // options.AddSigningCertificate();
+            }
 
             options.UseAspNetCore()
                 .EnableTokenEndpointPassthrough()
@@ -246,8 +251,8 @@ try
             // AspNet Core apps request openid profile by default.
             // It appears custom scopes do not need to be added?
             options.RegisterScopes(OpenIddictConstants.Scopes.Profile);
-            options.RegisterScopes(OpenIddictConstants.Scopes.Email);
-            options.RegisterScopes(OpenIddictConstants.Scopes.Roles);
+            options.RegisterScopes(OpenIddictConstants.Scopes.Email); // to support federation
+            options.RegisterScopes(OpenIddictConstants.Scopes.Roles); // to support RBAC
         });
 
     // Identity
@@ -307,13 +312,22 @@ try
             {
                 sql = reader.ReadToEnd();
             }
-        
-            using (var cn = new SqliteConnection($"Filename={DEFAULT_SQLITE_QUARTZ_DATABASE_PATH}"))
+
+            try
             {
-                cn.Open();
-                using (var sqliteCommand = new SqliteCommand(sql, cn))
-                    sqliteCommand.ExecuteNonQuery();
+                using (var cn = new System.Data.SQLite.SQLiteConnection(
+                           $"Data Source={DEFAULT_SQLITE_QUARTZ_DATABASE_PATH}"))
+                {
+                    cn.Open();
+                    using (var sqliteCommand = new System.Data.SQLite.SQLiteCommand(sql, cn))
+                        sqliteCommand.ExecuteNonQuery();
+                }
             }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error initializing Quartz database.");
+            }
+
             Log.Information("Quartz database initialization complete.");
         }
     }

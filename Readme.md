@@ -57,7 +57,7 @@ While other drivers are available for EF, OpenIddict uses Quartz.NET which only 
 
 - HTTPS certificate
 - OpenIdConnect certificate - Token signing
-- Master Certificate - generate data protection keys
+- Data Protection Certificate - generate data protection keys (for encryption of tokens and PII data)
 
 
 ## Concepts
