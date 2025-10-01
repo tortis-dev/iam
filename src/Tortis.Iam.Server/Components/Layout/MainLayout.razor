@@ -22,13 +22,12 @@
                     <FluentNavLink Icon="@(new Icons.Regular.Size24.Person())" Href="users" Tooltip="Users">Users</FluentNavLink>
                     <FluentNavLink Icon="@(new Icons.Regular.Size24.People())" Href="roles" Tooltip="Roles">Roles</FluentNavLink>
                     <FluentNavLink Icon="@(new Icons.Regular.Size24.Apps())" Href="applications" Tooltip="Applications">Applications</FluentNavLink>
-                    <FluentNavLink Icon="@(new Icons.Regular.Size24.Box())" Href="resources" Tooltip="APIs">APIs</FluentNavLink>
+                    <FluentNavLink Icon="@(new Icons.Regular.Size24.Box())" Href="resources" Tooltip="Resources &amp; Scopes">Resources &amp; Scopes</FluentNavLink>
                 </FluentNavMenu>
                 <FluentBodyContent>
                     @Body
                 </FluentBodyContent>
             </FluentStack>
-            @* <FluentSpacer/> *@
             <FluentFooter Class="footer">
                     <FluentToolbar Style="width: 100%;height: 36px">Environment: @HostEnvironment?.EnvironmentName</FluentToolbar>
             </FluentFooter>

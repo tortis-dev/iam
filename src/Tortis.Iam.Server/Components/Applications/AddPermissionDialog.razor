@@ -1,0 +1,63 @@
+@using OpenIddict.Core
+@using OpenIddict.EntityFrameworkCore.Models
+@implements IDialogContentComponent<IEnumerable<string>>
+@inject OpenIddictScopeManager<OpenIddictEntityFrameworkCoreScope<Guid>> ScopeManager
+
+
+<FluentDataGrid Items="@_availableScopes">
+    <SelectColumn
+        SelectMode="DataGridSelectMode.Multiple"
+        @bind-SelectedItems="@_selectedScopes"/>
+    <PropertyColumn Property="p => p.Resource" Title="Resource" />
+    <PropertyColumn Property="p => p.Name" Title="Scope" />
+    <PropertyColumn Property="p => p.DisplayName" Title="Display Name" />
+</FluentDataGrid>
+<FluentDialogFooter>
+    <FluentButton Appearance="Appearance.Accent" OnClick="@AssignAsync">Assign</FluentButton>
+    <FluentButton Appearance="Appearance.Neutral" OnClick="@CancelAsync">Cancel</FluentButton>
+</FluentDialogFooter>
+@code {
+
+    record Model(Guid Id, string Resource, string Name, string? DisplayName, string? Description);
+
+    IQueryable<Model> _availableScopes;
+    IEnumerable<Model> _selectedScopes;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _selectedScopes = new List<Model>();
+        var scopes = new List<Model>();
+        await foreach (var scope in ScopeManager.ListAsync())
+        {
+            if (Content.Contains(scope.Name))
+                continue;
+            
+            scopes.Add(new Model(
+                scope.Id, 
+                (await ScopeManager.GetResourcesAsync(scope)).FirstOrDefault() ?? "Global",
+                scope.Name!,
+                scope.DisplayName,
+                scope.Description));
+        }
+
+        _availableScopes = scopes.AsQueryable();
+    }
+
+    [Parameter]
+    public IEnumerable<string> Content { get; set; }
+    
+    [CascadingParameter]
+    public FluentDialog Dialog { get; set; } = default!;
+    
+    async Task AssignAsync()
+    {
+        await Dialog.CloseAsync(_selectedScopes.Select(s => s.Name).ToArray());
+    }
+
+
+    async Task CancelAsync()
+    {
+        await Dialog.CancelAsync();
+    }
+
+}

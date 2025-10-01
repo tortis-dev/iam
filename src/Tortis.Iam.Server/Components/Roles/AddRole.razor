@@ -41,7 +41,7 @@
     {
         var role = new IamRole(Model.Name)
         {
-            Id = Guid.NewGuid(),
+            Id = Ulid.NewUlid().ToGuid(),
             NormalizedName = Model.Name.ToUpperInvariant(),
             CreatedOn = DateTimeOffset.Now,
             CreatedBy = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User.FindFirstValue(ClaimTypes.NameIdentifier)!

@@ -2,8 +2,8 @@
 @rendermode InteractiveServer
 
 @inject IamResourceManager ResourceManager;
-
 @inject NavigationManager Navigation;
+@inject IDialogService DialogService;
 
 <PageTitle>API Resources</PageTitle>
 <h3>API Resources</h3>
@@ -11,14 +11,14 @@
     APIs are called by Applications. Resource cannot authenticate. They simply validate tokens are valid.
 </p>
 <FluentButton Appearance="Appearance.Accent" OnClick="@(() => Navigation.NavigateTo("/add-resource"))">New API Resource</FluentButton>
-<FluentDataGrid Items="ResourceManager.ApiResources" Pagination="@_pagination">
+<FluentDataGrid @ref="@_resourcesGrid" Items="ResourceManager.ApiResources" Pagination="@_pagination" RowSize="DataGridRowSize.Large">
     <PropertyColumn Property="p => p.Urn" Title="Urn" Sortable="true" IsDefaultSortColumn="true" />
     <PropertyColumn Property="p => p.Description" Title="Description" Sortable="true" />
     <TemplateColumn Title="Actions" Width="120px">
-        <FluentButton OnClick="@(() => Navigation.NavigateTo($"applications/{context.Id}"))">
+        <FluentButton OnClick="@(() => Navigation.NavigateTo($"/resources/{context.Id}"))">
             <FluentIcon Value="@(new Icons.Regular.Size16.Edit())" Color="Color.Neutral"></FluentIcon>
         </FluentButton>
-        <FluentButton>
+        <FluentButton OnClick="@(() => DeleteAsync(context))">
             <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error"></FluentIcon>
         </FluentButton>
     </TemplateColumn>
@@ -27,4 +27,17 @@
 
 @code {
     readonly PaginationState _pagination = new() { ItemsPerPage = 10 } ;
+    FluentDataGrid<IamResource> _resourcesGrid;
+    
+    async Task DeleteAsync(IamResource resource)
+    {
+        var dialog = await DialogService.ShowConfirmationAsync($"Are you sure you want to delete resource {resource.Urn}?");
+        var confirmationResult = await dialog.Result;
+        if (confirmationResult.Cancelled)
+            return;
+        
+        await ResourceManager.DeleteAsync(resource);
+        await _resourcesGrid.RefreshDataAsync();
+    }
+
 }

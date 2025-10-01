@@ -12,8 +12,6 @@
 <FluentStack Orientation="Orientation.Vertical" >
   <FluentInputLabel>Client Id</FluentInputLabel>
   <FluentLabel>@_model.ClientId</FluentLabel>
-  <FluentInputLabel>Client Secret</FluentInputLabel>
-  <FluentLabel>@_model.ClientSecret</FluentLabel>
   <ApplicationDetail Model="@_model" OnSubmit="OnSubmit" />
 </FluentStack>
 @code {
@@ -24,7 +22,7 @@
     ApplicationViewModel _model = new();
 
     OpenIddictApplicationDescriptor _application = new();
-
+    
     protected override async Task OnInitializedAsync()
     {
         var app = await ApplicationManager.FindByIdAsync(Id.ToString());

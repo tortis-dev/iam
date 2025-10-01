@@ -326,6 +326,7 @@ try
             catch (Exception ex)
             {
                 Log.Error(ex, "Error initializing Quartz database.");
+                throw;
             }
 
             Log.Information("Quartz database initialization complete.");

@@ -1,0 +1,55 @@
+@page "/add-resource"
+@using System.ComponentModel.DataAnnotations
+@inject NavigationManager Navigation
+@inject IamResourceManager ResourceManager
+<h3>Add Resource</h3>
+
+<FluentEditForm EditContext="@_editContext" OnValidSubmit="@SaveAsync">
+    <FluentStack Orientation="Orientation.Vertical">
+        <DataAnnotationsValidator />
+        <FluentTextField Label="Urn" @bind-Value="@_model.Urn" Placeholder="urn:example" />
+        <FluentValidationMessage For="() => _model.Urn" />
+        <FluentTextField Label="Description" @bind-Value="@_model.Description" />
+        <FluentStack Orientation="Orientation.Horizontal">
+            <FluentButton Loading="_saving" Appearance="Appearance.Accent" Type="ButtonType.Submit">Save</FluentButton>
+            <FluentButton OnClick="@(() => Navigation.NavigateTo("/resources"))" >Cancel</FluentButton>
+        </FluentStack>
+    </FluentStack>
+</FluentEditForm>
+@code {
+
+    class InputModel
+    {
+        [Required(AllowEmptyStrings = false)]
+        public string? Urn { get; set; }
+
+        public string? Description { get; set; }
+    }
+
+    InputModel _model = new();
+    EditContext _editContext= default!;
+    bool _saveButtonDisabled;
+    bool _saving;
+    
+    protected override void OnInitialized()
+    {
+        _saveButtonDisabled = true;
+        _editContext = new EditContext(_model);
+        _editContext.OnFieldChanged += ( _, _ ) => _saveButtonDisabled = false;
+    }
+
+    async Task SaveAsync()
+    {
+        _saveButtonDisabled = true;
+        _saving = true;
+
+        var resource = new IamResource(_model.Urn!)
+        {
+            Id = Ulid.NewUlid().ToGuid(),
+            Description = _model.Description,
+            CreatedBy = "system"
+        };
+        await ResourceManager.CreateAsync(resource);
+        Navigation.NavigateTo($"/resources/{resource.Id}");
+    }
+}

@@ -1,0 +1,52 @@
+@using System.ComponentModel.DataAnnotations
+@using OpenIddict.Abstractions
+@implements IDialogContentComponent
+
+<FluentEditForm EditContext="@_editContext">
+    <DataAnnotationsValidator />
+    <FluentTextField @bind-Value="@_model.Name" Label="Scope Name" Placeholder="customer.read"/>
+    <FluentValidationMessage For="@(() => _model.Name)"/>
+    <FluentTextField @bind-Value="@_model.DisplayName" Label="Display Name" Placeholder="Read Customer"/>
+    <FluentTextField @bind-Value="@_model.Description" Label="Description"/>
+</FluentEditForm>
+<FluentDialogFooter>
+    <FluentButton Appearance="Appearance.Accent" OnClick="@SaveAsync">Assign</FluentButton>
+    <FluentButton Appearance="Appearance.Neutral" OnClick="@CancelAsync">Cancel</FluentButton>
+</FluentDialogFooter>
+@code {
+    
+    [CascadingParameter]
+    public FluentDialog Dialog { get; set; } = default!;
+    
+    public class ScopeModel
+    {
+        [Required]
+        [RegularExpression(@"^[A-Za-z0-9][!#$%&'()*+,\-./:;<=>?@\[\]^_`{|}~A-Za-z0-9]*$", ErrorMessage = "Must start with a letter or digit, only printable ASCII, no spaces, no quotes, and no backslashes.")]
+        public string? Name { get; set; }
+        public string? DisplayName { get; set; }
+        public string? Description { get; set; }
+    }
+
+    EditContext _editContext;
+    ScopeModel _model;
+
+    protected override void OnInitialized()
+    {
+        _model = new ScopeModel();
+        _editContext = new EditContext(_model);
+    }
+
+    async Task SaveAsync()
+    {
+        if (_editContext.Validate())
+        {
+            await Dialog.CloseAsync(_model);
+        }
+    }
+
+    async Task CancelAsync()
+    {
+        await Dialog.CancelAsync();
+    }
+
+}

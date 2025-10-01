@@ -6,7 +6,7 @@
 @inject IDialogService DialogService;
 @inject ILogger<ApplicationDetail> Logger;
 
-<FluentEditForm Model="Model" OnValidSubmit="Submit">
+<FluentEditForm EditContext="@_editContext" OnValidSubmit="Submit">
     <FluentGrid Justify="JustifyContent.FlexStart">
         <FluentGridItem md="7">
             <FluentStack Orientation="Orientation.Vertical">
@@ -31,15 +31,15 @@
                 <FluentTextField @bind-Value="Model.RedirectUris" Label="Redirect URIs" Style="width: 100%" />
 
                 <FluentStack Orientation="Orientation.Horizontal" Width="100%" HorizontalAlignment="HorizontalAlignment.Left" >
-                    <h4>Permissions (Allowed application scopes)</h4>
+                    <h4>Permissions (Allowed scopes)</h4>
                     <FluentStack Orientation="Orientation.Horizontal" Width="100%" HorizontalAlignment="HorizontalAlignment.Right" >
-                        <FluentButton Type="ButtonType.Button" Appearance="Appearance.Accent">Add Permission</FluentButton>
+                        <FluentButton Type="ButtonType.Button" Appearance="Appearance.Accent" OnClick="AddPermission">Add Permission</FluentButton>
                     </FluentStack>                
                 </FluentStack>
 
-                <FluentDataGrid Items="@Model.Scopes.AsQueryable()" Style="width: 100%;">
+                <FluentDataGrid Items="@Model.Scopes.AsQueryable()" Style="width: 100%;" RowSize="DataGridRowSize.Large">
                     <PropertyColumn Title="Scope" Property="arg => arg"></PropertyColumn>
-                    <TemplateColumn Title="Actions" Context="ScopesContext" Width="120px">
+                    <TemplateColumn Title="Actions" Context="scopesContext" Width="120px">
                             <FluentButton OnClick="@(() => { })">
                                 <FluentIcon Value="@(new Icons.Regular.Size16.Edit())" Color="Color.Neutral"></FluentIcon>
                             </FluentButton>
@@ -49,7 +49,10 @@
                     </TemplateColumn>
                 </FluentDataGrid>
                 
-                <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent">Save</FluentButton>
+                <FluentStack Orientation="Orientation.Horizontal">
+                    <FluentButton Loading="@_saving" Type="ButtonType.Submit" Appearance="Appearance.Accent" Disabled="@_saveButtonDisabled">Save</FluentButton>
+                    <FluentButton OnClick="Discard" Disabled="@_saveButtonDisabled">Discard</FluentButton>
+                </FluentStack>
             </FluentStack>
             
         </FluentGridItem>
@@ -89,8 +92,8 @@
         new() { Value = OpenIddictConstants.ClientTypes.Public, Text = "Public (e.g. SPAs, Desktop Apps, Mobile Apps)"},
         new() { Value = OpenIddictConstants.ClientTypes.Confidential, Text = "Confidential (e.g. Server Side Web Apps, APIs)" }
     };
-    
-    [Parameter]
+
+    [Parameter] 
     public required ApplicationViewModel Model { get; init; }
     [Parameter]
     public required Func<Task> OnSubmit { get; init; }
@@ -98,10 +101,21 @@
     Option<string>? _selectedAppType;
     Option<string>? _selectedClientType;
 
+    bool _saveButtonDisabled;
+    bool _saving;
+    EditContext _editContext;
+    ApplicationViewModel _undo;
+    
     protected override void OnInitialized()
     {
+        _saveButtonDisabled = true;
         _selectedAppType = AppTypes.FirstOrDefault(appType => appType.Value == Model.ApplicationType) ?? AppTypes[0];
         _selectedClientType = ClientTypes.FirstOrDefault(clientType => clientType.Value == Model.ClientType) ?? ClientTypes[0];
+
+        _editContext = new EditContext(Model);
+        _editContext.OnFieldChanged += (_, _) => _saveButtonDisabled = false;
+
+        _undo = Model.Clone();
     }
     
     async Task Submit()
@@ -109,11 +123,50 @@
         try
         {
             await OnSubmit();
+            _saveButtonDisabled = true;
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, ex.Message);
             await DialogService.ShowErrorAsync(ex.Message);
         }
+        finally
+        {
+            _saving = false;
+        }
     }
+
+    async Task AddPermission()
+    {
+        var dialog = await DialogService.ShowDialogAsync<AddPermissionDialog>(Model.Scopes, new DialogParameters
+        {
+            Width = "75%"
+        });
+        var result = await dialog.Result;
+        if (result.Data is string[] selectedScopes)
+            Model.Scopes.AddRange(selectedScopes);
+    }
+
+    void Discard()
+    {
+        Model.Name = _undo.Name;
+        Model.ApplicationType = _undo.ApplicationType;
+        Model.ClientType = _undo.ClientType;
+        Model.RedirectUris = _undo.RedirectUris;
+        Model.AllowAuthCode = _undo.AllowAuthCode;
+        Model.RequiredProofKeyForCodeExchange = _undo.RequiredProofKeyForCodeExchange;
+        Model.AllowClientCredentials = _undo.AllowClientCredentials;
+        Model.AllowRefreshToken = _undo.AllowRefreshToken;
+        Model.AllowIdToken = _undo.AllowIdToken;
+        Model.AllowCodeIdToken = _undo.AllowCodeIdToken;
+        Model.AllowEmail = _undo.AllowEmail;
+        Model.AllowProfile = _undo.AllowProfile;
+        Model.AllowRoles = _undo.AllowRoles;
+        Model.AllowAddress = _undo.AllowAddress;
+        Model.AllowPhone = _undo.AllowPhone;
+        Model.Scopes.Clear();
+        _undo.Scopes.ForEach(s => Model.Scopes.Add(new String(s)));
+        _saveButtonDisabled = true;
+    }
+
 }

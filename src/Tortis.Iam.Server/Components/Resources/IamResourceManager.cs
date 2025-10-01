@@ -2,8 +2,6 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using OpenIddict.Abstractions;
-
 using Tortis.Iam.Server.Data;
 
 namespace Tortis.Iam.Server.Components.Resources;
@@ -32,6 +30,18 @@ public class IamResourceManager
     public async Task CreateAsync(IamResource resource, CancellationToken cancellationToken = default)
     {
         await _dbContext.ApiResources.AddAsync(resource, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+    
+    public async Task UpdateAsync(IamResource resource, CancellationToken cancellationToken = default)
+    {
+        _dbContext.Attach(resource).State = EntityState.Modified;
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+    
+    public async Task DeleteAsync(IamResource resource, CancellationToken cancellationToken = default)
+    {
+        _dbContext.ApiResources.Remove(resource);
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

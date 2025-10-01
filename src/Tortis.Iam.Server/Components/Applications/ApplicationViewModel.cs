@@ -31,6 +31,35 @@ public class ApplicationViewModel
     public bool RequiredProofKeyForCodeExchange { get; set; }
 
     public List<string> Scopes { get; } = [];
+    
+    public ApplicationViewModel Clone()
+    {
+        var newModel = new ApplicationViewModel
+        {
+            Name = this.Name,
+            ApplicationType = this.ApplicationType,
+            ClientType = this.ClientType,
+            ClientId = this.ClientId,
+            ClientSecret = this.ClientSecret,
+            AllowClientCredentials = this.AllowClientCredentials,
+            AllowAuthCode = this.AllowAuthCode,
+            AllowRefreshToken = this.AllowRefreshToken,
+            AllowEmail = this.AllowEmail,
+            AllowProfile = this.AllowProfile,
+            AllowRoles = this.AllowRoles,
+            AllowAddress = this.AllowAddress,
+            AllowPhone = this.AllowPhone,
+            AllowCode = this.AllowCode,
+            AllowIdToken = this.AllowIdToken,
+            AllowCodeIdToken = this.AllowCodeIdToken,
+            RequiredProofKeyForCodeExchange = this.RequiredProofKeyForCodeExchange,
+            RedirectUris = this.RedirectUris
+        };
+        
+        this.Scopes.ForEach(s => newModel.Scopes.Add(new String(s)));
+        
+        return newModel;
+    }
 }
 
 static class MappingExtensions
@@ -66,12 +95,16 @@ static class MappingExtensions
         if(application.Permissions is not null)
             model.Scopes.AddRange(
                 application.Permissions
-                    .Where(p => p.StartsWith(OpenIddictConstants.Permissions.Prefixes.Scope))
+                    .Where(p => 
+                        p.StartsWith(OpenIddictConstants.Permissions.Prefixes.Scope) &&
+                        !SystemScopes.Contains(p))
                     .Select(p => p.Substring(OpenIddictConstants.Permissions.Prefixes.Scope.Length)));
         
         return model;
     }
 
+    private static string[] SystemScopes = [OpenIddictConstants.Permissions.Scopes.Address, OpenIddictConstants.Permissions.Scopes.Email, OpenIddictConstants.Permissions.Scopes.Phone, OpenIddictConstants.Permissions.Scopes.Profile, OpenIddictConstants.Permissions.Scopes.Roles];
+    
     /// <summary>
     /// Maps an application view model to an OpenIddict application.
     /// </summary>
@@ -119,6 +152,9 @@ static class MappingExtensions
         if (applicationViewModel is { AllowAuthCode: true, RequiredProofKeyForCodeExchange: true })
             app.Requirements.Add(OpenIddictConstants.Requirements.Features.ProofKeyForCodeExchange);
 
+        foreach (var scope in applicationViewModel.Scopes)
+            app.Permissions.Add(OpenIddictConstants.Permissions.Prefixes.Scope + scope);
+        
         return app;
     }
 }
