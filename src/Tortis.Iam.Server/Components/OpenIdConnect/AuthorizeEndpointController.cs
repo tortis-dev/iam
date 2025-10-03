@@ -50,8 +50,13 @@ public class AuthorizeEndpointController : ControllerBase
                 });
         }
 
-        // HACK: This should never be null. Do we want to handle it better?
-        var nameClaimValue = authenticationResult.Principal!.Identity!.Name ?? Guid.NewGuid().ToString();
+        // Ensure the user principal has a valid name claim.
+        var nameClaimValue = authenticationResult.Principal!.Identity!.Name;
+        if (string.IsNullOrEmpty(nameClaimValue))
+        {
+            // The authentication state is invalid if the name is missing.
+            return Forbid();
+        }
         var identifier = authenticationResult.Principal.FindFirstValue(ClaimTypes.NameIdentifier) ?? nameClaimValue;
         // Create a new claims principal
         var claims = new List<Claim>
