@@ -1,0 +1,80 @@
+@page "/users"
+@rendermode InteractiveServer
+
+@inject IamUserManager UserManager;
+@inject NavigationManager Navigation;
+@inject IDialogService DialogService;
+
+<PageTitle>Users</PageTitle>
+<h3>Users</h3>
+<FluentButton Appearance="Appearance.Accent" OnClick="@(() => Navigation.NavigateTo("/add-user"))">New User</FluentButton>
+<FluentDataGrid @ref="_usersGrid" Items="_users" Pagination="@_pagination" RowSize="DataGridRowSize.Large">
+    <PropertyColumn Property="p => p.UserName" Title="Username" Sortable="true" IsDefaultSortColumn="true" />
+    <PropertyColumn Property="p => p.Email" Title="Email" Sortable="true" />
+    <TemplateColumn Title="2FA" Sortable="true">
+            @if(context.TwoFactorEnabled)
+            {
+                <FluentIcon Value="@(new Icons.Regular.Size16.Checkmark())" Color="Color.Success" />
+            }
+            else
+            {
+                <FluentIcon Value="@(new Icons.Regular.Size16.Dismiss())" Color="Color.Error" />
+            }
+    </TemplateColumn>
+    <TemplateColumn Title="Locked" Sortable="true">
+        @if(context.AccountLocked)
+        {
+            <FluentIcon Value="@(new Icons.Regular.Size16.LockClosed())" Color="Color.Error" Title="Account is locked." />
+        }
+        else
+        {
+            <FluentIcon Value="@(new Icons.Regular.Size16.LockOpen())" Color="Color.Success" Title="Account is unlocked." />
+        }
+    </TemplateColumn>
+    <TemplateColumn Title="Actions">
+        <FluentButton OnClick="@(() => Navigation.NavigateTo($"users/{context.Id}"))">
+            <FluentIcon Value="@(new Icons.Regular.Size16.Edit())" Color="Color.Neutral"></FluentIcon>
+        </FluentButton>
+        <FluentButton OnClick="async () => await DeleteUserAsync(context)">
+            <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error"></FluentIcon>
+        </FluentButton>
+    </TemplateColumn>
+</FluentDataGrid>
+<FluentPaginator State="@_pagination" />
+
+@code {
+    IQueryable<IamUser> _users = default!;
+    readonly PaginationState _pagination = new() { ItemsPerPage = 10 };
+    FluentDataGrid<IamUser> _usersGrid = default!; // set implicitly by @ref
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        _users = UserManager.Users;
+    }
+
+    async Task DeleteUserAsync(IamUser user)
+    {
+        var dialog = await DialogService.ShowConfirmationAsync($"Are you sure you want to delete user {user}?");
+        var confirmationResult = await dialog.Result;
+        if (confirmationResult.Cancelled)
+            return;
+
+        var deleteResult = await UserManager.DeleteAsync(user);
+        if (deleteResult.Succeeded)
+        {
+            await DialogService.ShowInfoAsync($"{user}  has been deleted.");
+            await _usersGrid.RefreshDataAsync();
+        }
+        else
+        {
+            var errorMarkup = "<ul>";
+            foreach (var error in deleteResult.Errors)
+                errorMarkup += "<li>" + error.Description + "</li>";
+
+            errorMarkup += "</ul>";
+            await DialogService.ShowErrorAsync(errorMarkup, title: "Delete Failed");
+        }
+        
+    }
+}

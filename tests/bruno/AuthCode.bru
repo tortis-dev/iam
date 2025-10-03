@@ -1,0 +1,19 @@
+meta {
+  name: AuthCode
+  type: http
+  seq: 4
+}
+
+get {
+  url: https://localhost:5000/.well-known/openid-configuration
+  body: none
+  auth: oauth2
+}
+
+auth:oauth2 {
+  grant_type: client_credentials
+  access_token_url: https://localhost:5000/connect/token
+  client_id: Admin
+  client_secret: Admin1234!
+  scope: fullaccess offline_accessAd
+}

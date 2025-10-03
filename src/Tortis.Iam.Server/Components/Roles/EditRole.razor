@@ -1,0 +1,173 @@
+@page "/roles/{id:guid}"
+@rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Identity
+@using Tortis.Iam.Server.Components.Users
+
+@inject RoleManager<IamRole> RoleManager
+@inject UserManager<IamUser> UserManager
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IDialogService DialogService
+
+@attribute [Authorize]
+
+<PageTitle>Edit Role: @Model.Name</PageTitle>
+<h3>@Model.Name Role</h3>
+
+@if (_isLoading)
+{
+    <div>Loading...</div>
+}
+else
+{
+    <FluentGrid>
+        <FluentGridItem xs="12" sm="12" md="6" lg="4" xl="4">
+            <FluentEditForm EditContext="@_editContext" OnValidSubmit="Submit">
+                <DataAnnotationsValidator/>
+                <FluentStack Orientation="Orientation.Vertical">
+                    <FluentTextField @bind-Value="Model.Name" Label="Role Name" Style="width: 100%"/>
+                    <FluentValidationMessage For="() => Model.Name"></FluentValidationMessage>
+                    <FluentTextArea @bind-Value="Model.Description" Label="Description" Style="width: 100%"/>
+                    <FluentStack Orientation="Orientation.Horizontal">
+                        <FluentButton Loading="_saving" Type="ButtonType.Submit" Appearance="Appearance.Accent" Disabled="@_saveButtonDisabled">Save</FluentButton>
+                        <FluentButton OnClick="@Discard" Disabled="@_saveButtonDisabled">Discard</FluentButton>
+                    </FluentStack>
+                </FluentStack>
+            </FluentEditForm>
+        </FluentGridItem>
+        <FluentGridItem xs="12" sm="12" md="6" lg="8" xl="8">
+            <h4>Members</h4>
+            <FluentButton Title="Assign the user to the role" Appearance="Appearance.Accent" OnClick="@AddMember">
+                Add Member
+            </FluentButton>
+            <FluentDataGrid Items="_members">
+                <PropertyColumn Property="p => p.UserName"></PropertyColumn>
+                <PropertyColumn Property="p => p.Name"></PropertyColumn>
+                <TemplateColumn Context="role" Title="Actions" Width="100px">
+                    <FluentButton Title="Remove member from role"
+                                  OnClick="@(async () => await RemoveMemberAsync(role))">
+                        <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error"></FluentIcon>
+                    </FluentButton>
+                </TemplateColumn>
+            </FluentDataGrid>
+        </FluentGridItem>
+</FluentGrid>
+        
+}
+
+@code {
+    [Parameter]
+    public required Guid Id { get; init; }
+    
+    private sealed class InputModel
+    {
+        [Required(AllowEmptyStrings = false)]
+        public string Name { get; set; } = string.Empty;
+
+        public string? Description { get; set; }
+    };
+    
+    InputModel Model { get; set; } = new();
+    EditContext _editContext = default!;
+    bool _isLoading = true;
+    bool _saving;
+    bool _saveButtonDisabled;
+    
+    IamRole _role = default!;
+    IQueryable<IamUser>? _members;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        _saveButtonDisabled = true;
+        var exitingRole = await RoleManager.FindByIdAsync(Id.ToString());
+        if (exitingRole is null)
+        {
+            var dialog = await DialogService.ShowErrorAsync("Role does not exist.");
+            await dialog.Result;
+            NavigationManager.NavigateTo("/roles");
+            return; //unreachable but makes the compiler and analyzers happy.
+        } 
+        _role = exitingRole;
+        
+        Model.Name = _role.Name ?? string.Empty;
+        Model.Description = _role.Description;
+
+        _editContext = new EditContext(Model);
+        _editContext.OnFieldChanged += (_, _) => _saveButtonDisabled = false;
+        
+        var members = await UserManager.GetUsersInRoleAsync(_role.Name!);
+        _members = members.AsQueryable();
+        _isLoading = false;
+    }
+
+    async Task Submit()
+    {
+        _saving = true;
+        _saveButtonDisabled = true;
+        
+        _role.Name = Model.Name;
+        _role.Description = Model.Description;
+        _role.NormalizedName = Model.Name.ToUpperInvariant();
+        _role.ModifiedOn = DateTimeOffset.Now;
+        _role.ModifiedBy = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User.FindFirstValue(ClaimTypes.NameIdentifier);
+        
+        var result = await RoleManager.UpdateAsync(_role);
+
+        if (!result.Succeeded)
+            await ShowErrorDialogAsync(result);
+
+        _saving = false;
+    }
+
+    async Task RemoveMemberAsync(IamUser user)
+    {
+        await UserManager.RemoveFromRoleAsync(user, _role.Name!);
+        var members = await UserManager.GetUsersInRoleAsync(_role.Name!);
+        _members = members.AsQueryable();
+    }
+
+    async Task AddMember()
+    {
+        var dialog = await DialogService.ShowDialogAsync<AddMemberDialog>(new DialogParameters
+        {
+            Title = "Add Member",
+            Modal = true,
+            Width = "75%"
+        });
+        var result = await dialog.Result;
+        if (result.Cancelled)
+            return;
+
+        var membersToAdd = result.Data as IEnumerable<IamUser>;
+        if (membersToAdd is null || _role.Name is null)
+            return;
+        
+        foreach (var member in membersToAdd)
+            await UserManager.AddToRoleAsync(member, _role.Name);
+
+        var members = await UserManager.GetUsersInRoleAsync(_role.Name);
+        _members = members.AsQueryable();
+    }
+
+    void Discard()
+    { 
+        _saveButtonDisabled = true;
+        Model.Name = _role.Name!; // should never be null
+        Model.Description = _role?.Description;
+    }
+
+    async Task ShowErrorDialogAsync(IdentityResult result)
+    {
+        var errorMarkup = "<ul>";
+        foreach (var error in result.Errors)
+            errorMarkup += "<li>" + error.Description + "</li>";
+
+        errorMarkup += "</ul>";
+        await DialogService.ShowErrorAsync(errorMarkup, title: "Save Failed");
+    }
+
+}

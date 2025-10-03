@@ -1,0 +1,154 @@
+@page "/resources/{id:guid}"
+@using System.ComponentModel.DataAnnotations
+@using OpenIddict.Abstractions
+@using OpenIddict.Core
+@using OpenIddict.EntityFrameworkCore.Models
+@inject NavigationManager NavigationManager
+@inject IamResourceManager ResourceManager
+@inject IDialogService DialogService;
+@inject OpenIddictScopeManager<OpenIddictEntityFrameworkCoreScope<Guid>> ScopeManager;
+
+<h3>@_model.Urn</h3>
+
+<FluentGrid>
+    <FluentGridItem xs="12" sm="12" md="6" lg="4" xl="4">
+        <FluentEditForm EditContext="@_editContext" OnValidSubmit="@SaveAsync">
+            <FluentStack Orientation="Orientation.Vertical">
+                <DataAnnotationsValidator />
+                <FluentTextField Label="Urn" @bind-Value="@_model.Urn" Placeholder="urn:example" Style="width: 100%;" />
+                <FluentValidationMessage For="() => _model.Urn" />
+                <FluentTextField Label="Description" @bind-Value="@_model.Description" Style="width: 100%;"/>
+                <FluentStack Orientation="Orientation.Horizontal">
+                    <FluentButton Loading="_saving" Appearance="Appearance.Accent" Type="ButtonType.Submit" Disabled="_saveButtonDisabled">Save</FluentButton>
+                    <FluentButton OnClick="@Discard" Disabled="_saveButtonDisabled">Discard</FluentButton>
+                </FluentStack>
+            </FluentStack>
+        </FluentEditForm>       
+    </FluentGridItem>
+    <FluentGridItem xs="12" sm="12" md="6" lg="8" xl="8">
+        <h4>Scopes</h4>
+        <FluentStack Orientation="Orientation.Vertical">
+            <FluentButton Appearance="Appearance.Accent" OnClick="@AddScopeAsync">New Scope</FluentButton>
+            <FluentDataGrid @ref="@_scopesGrid" Items="@_scopes" Style="width: 100%;" RowSize="DataGridRowSize.Large">
+                <PropertyColumn Property="p => p.Name"></PropertyColumn>
+                <PropertyColumn Property="p => p.DisplayName"></PropertyColumn>
+                <PropertyColumn Property="p => p.Description"></PropertyColumn>
+                <TemplateColumn Title="Actions" Width="100px">
+                    <FluentButton Title="Delete scope"
+                                  OnClick="@(async () => await DeleteScopeAsync(context))">
+                        <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error"></FluentIcon>
+                    </FluentButton>
+                </TemplateColumn>
+            </FluentDataGrid>
+        </FluentStack>
+    </FluentGridItem>
+</FluentGrid>
+
+@code {
+
+    [Parameter]
+    public Guid Id { get; set; }
+    
+    class InputModel
+    {
+        [Required(AllowEmptyStrings = false), Uri]
+        public string? Urn { get; set; }
+
+        public string? Description { get; set; }
+    }
+
+    IamResource _existingResource = default!;
+    InputModel _model = default!;
+    EditContext _editContext= default!;
+    IQueryable<OpenIddictEntityFrameworkCoreScope<Guid>> _scopes;
+    FluentDataGrid<OpenIddictEntityFrameworkCoreScope<Guid>> _scopesGrid;
+    
+    bool _saveButtonDisabled;
+    bool _saving;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        _saveButtonDisabled = true;
+
+        _existingResource = await ResourceManager.FindByIdAsync(Id);
+        
+        if (_existingResource is null)
+        {
+            var dialog = await DialogService.ShowErrorAsync("resource does not exist.");
+            await dialog.Result;
+            NavigationManager.NavigateTo("/users");
+            return; //unreachable but makes the compiler and analyzers happy.
+        }
+
+        _model = new InputModel
+        {
+            Urn = _existingResource.Uri,
+            Description = _existingResource.Description
+        };
+        
+        _editContext = new EditContext(_model);
+        _editContext.OnFieldChanged += ( _, _ ) => _saveButtonDisabled = false;
+
+        _scopes = ScopeManager.FindByResourceAsync(_model.Urn).ToBlockingEnumerable().AsQueryable();
+    }
+
+    async Task SaveAsync()
+    {
+        _saveButtonDisabled = true;
+        _saving = true;
+
+        _existingResource.Uri = _model.Urn!;
+        _existingResource.Description = _model.Description;
+
+        try
+        {
+            await ResourceManager.UpdateAsync(_existingResource);
+        }
+        catch (Exception ex)
+        {
+            var errorMarkup = "<ul>";
+                errorMarkup += "<li>" + ex.Message + "</li>";
+
+            errorMarkup += "</ul>";
+            await DialogService.ShowErrorAsync(errorMarkup, title: "Save Failed");
+        }
+
+        _saving = false;
+    }
+
+    void Discard()
+    {
+        _model.Urn = _existingResource.Uri;
+        _model.Description = _existingResource.Description;
+    }
+
+    async Task DeleteScopeAsync(OpenIddictEntityFrameworkCoreScope<Guid> scope)
+    {
+        await ScopeManager.DeleteAsync(scope);
+        _scopes = ScopeManager.FindByResourceAsync(_model.Urn).ToBlockingEnumerable().AsQueryable();
+    }
+
+    async Task AddScopeAsync()
+    {
+        var dialog = await DialogService.ShowDialogAsync<AddScopeDialog>(new DialogParameters());
+        var result = await dialog.Result;
+        if (result.Cancelled)
+            return;
+
+        var scopeInput = result.Data as AddScopeDialog.ScopeModel;
+
+        if (scopeInput is null)
+            return;
+
+        var scope = new OpenIddictScopeDescriptor
+        {
+            Name = scopeInput.Name,
+            DisplayName = scopeInput.DisplayName,
+            Description = scopeInput.Description,
+            Resources = { _model.Urn! }
+        };
+        
+        await ScopeManager.CreateAsync(scope, CancellationToken.None);
+        _scopes = ScopeManager.FindByResourceAsync(_model.Urn!).ToBlockingEnumerable().AsQueryable();
+    }
+}

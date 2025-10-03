@@ -1,0 +1,9 @@
+@page "/{*route:nonfile}"
+@using Microsoft.AspNetCore.Mvc
+@attribute [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+
+<h1>The page you are looking for does not exist.</h1>
+@code {
+    [Parameter]
+    public string? Route { get; set; }
+}

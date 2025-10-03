@@ -1,0 +1,278 @@
+@page "/users/{userId:guid}"
+@rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
+@using System.Text.Encodings.Web
+@using Microsoft.AspNetCore.Identity
+@using Tortis.Iam.Server.Components.Roles
+
+@inject UserManager<IamUser> UserManager;
+@inject IDialogService DialogService;
+@inject IEmailSender<IamUser> EmailSender
+@inject NavigationManager NavigationManager;
+
+<h3>@_model.Username</h3>
+<FluentToolbar Style="width: 100%">
+    <FluentButton OnClick="ChangePasswordAsync" Title="Allows the administrator to change the user's password.">Change
+        Password
+    </FluentButton>
+    <FluentButton OnClick="ResetPasswordAsync" Title="Emails the user a password reset link.">Reset Password
+    </FluentButton>
+</FluentToolbar>
+<FluentEditForm EditContext="@_editContext" OnValidSubmit="@Submit">
+    <FluentGrid>
+        <FluentGridItem xs="12" sm="12" md="6" lg="4" xl="4">
+            <FluentStack Orientation="Orientation.Vertical">
+                <FluentTextField @bind-Value="@_model.Email" Label="Email" Style="width: 100%">
+                    @if (!string.IsNullOrWhiteSpace(_model.Email))
+                    {
+                        if (_model.EmailConfirmed)
+                        {
+                            <FluentIcon Value="@(new Icons.Regular.Size16.Checkmark())" Color="Color.Success" Slot="end"
+                                        Title="Email Confirmed"/>
+                        }
+                        else
+                        {
+                            <FluentIcon Value="@(new Icons.Regular.Size16.Warning())" Color="Color.Warning" Slot="end"
+                                        Title="Email Not Confirmed"/>
+                        }
+                    }
+                </FluentTextField>
+                <FluentTextField @bind-Value="@_model.PhoneNumber" Label="Phone Number"
+                                 TextFieldType="TextFieldType.Tel" Style="width: 100%">
+                    @if (!string.IsNullOrWhiteSpace(_model.PhoneNumber))
+                    {
+                        if (_model.PhoneNumberConfirmed)
+                        {
+                            <FluentIcon Value="@(new Icons.Regular.Size16.Checkmark())" Color="Color.Success" Slot="end"
+                                        Title="Phone Number Confirmed"/>
+                        }
+                        else
+                        {
+                            <FluentIcon Value="@(new Icons.Regular.Size16.Warning())" Color="Color.Warning" Slot="end"
+                                        Title="Phone Number Not Confirmed"/>
+                        }
+                    }
+                </FluentTextField>
+                <FluentTextField @bind-Value="_model.GivenName" Label="Given Name" Style="width: 100%"/>
+                <FluentTextField @bind-Value="_model.FamilyName" Label="Family Name" Style="width: 100%"/>
+                <FluentSwitch @bind-Value="@_model.TwoFactorEnabled" Label="Enable Two Factor Authentication"/>
+                <FluentSwitch @bind-Value="@_model.AccountLocked" Label="Account Locked"/>
+                <FluentStack Orientation="Orientation.Horizontal">
+                    <FluentButton Loading="@_saving" Type="ButtonType.Submit" Title="Save the changes"
+                                  Appearance="Appearance.Accent" Disabled="@_saveButtonDisabled">Save
+                    </FluentButton>
+                    <FluentButton Type="ButtonType.Button" OnClick="@Discard" Title="Discard the changes"
+                                  Appearance="Appearance.Neutral" Disabled="@_saveButtonDisabled">Discard
+                    </FluentButton>                    
+                </FluentStack>
+
+            </FluentStack>
+        </FluentGridItem>
+        <FluentGridItem xs="12" sm="12" md="6" lg="8" xl="8">
+            <h4>Role Membership</h4>
+            <FluentStack Orientation="Orientation.Vertical">
+                <FluentButton Title="Assign the user to a role" Appearance="Appearance.Accent" OnClick="@AssignRole">
+                    Assign Role
+                </FluentButton>
+                <FluentDataGrid TGridItem="string"
+                                Items="_roles.AsQueryable()"
+                                RowSize="DataGridRowSize.Large"
+                                Style="min-width: 400px"
+                                EmptyContent="@(builder => builder.AddContent(0, "The user is not member of any roles. Click the [Assign Role] button to assign roles to the user."))">
+                    <TemplateColumn Context="role" Title="Name">
+                        <FluentLabel>@role</FluentLabel>
+                    </TemplateColumn>
+                    <TemplateColumn Context="role" Title="Actions" Width="100px">
+                        <FluentButton Title="Remove role assignment"
+                                      OnClick="@(async () => await RemoveRoleAsync(role))">
+                            <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error"></FluentIcon>
+                        </FluentButton>
+                    </TemplateColumn>
+                </FluentDataGrid>
+            </FluentStack>
+        </FluentGridItem>
+    </FluentGrid>
+</FluentEditForm>
+
+@code {
+    [Parameter] public Guid UserId { get; set; }
+
+    InputModel _model = default!; // Initialized in OnInitializedAsync.
+    EditContext _editContext = default!; // Initialized by the framework.
+    IamUser _user = default!;
+
+    IList<string> _roles = Array.Empty<string>();
+
+    bool _saving;
+    bool _saveButtonDisabled;
+
+    private class InputModel
+    {
+        [Required]
+        public string? Username { get; set; }
+        [EmailAddress] public string? Email { get; set; }
+        public bool EmailConfirmed { get; set; }
+        public bool TwoFactorEnabled { get; set; }
+        public bool AccountLocked { get; set; }
+        public string? PhoneNumber { get; set; }
+        public bool PhoneNumberConfirmed { get; set; }
+        public string? GivenName { get; set; }
+        public string? FamilyName { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _saveButtonDisabled = true;
+
+        // Crazy verbosity to make the compiler and analyzers happy with the nullable BS.
+        var existingUser = await UserManager.FindByIdAsync(UserId.ToString());
+        if (existingUser is null)
+        {
+            var dialog = await DialogService.ShowErrorAsync("User does not exist.");
+            await dialog.Result;
+            NavigationManager.NavigateTo("/users");
+            return; //unreachable but makes the compiler and analyzers happy.
+        }
+        
+        _user = existingUser;
+
+        _model = new InputModel
+        {
+            Username = _user.UserName ?? string.Empty, //should never be null, but need to make the compiler happy.
+            Email = _user.Email,
+            EmailConfirmed = _user.EmailConfirmed,
+            GivenName = _user.GivenName,
+            FamilyName = _user.FamilyName,
+            TwoFactorEnabled = _user.TwoFactorEnabled,
+            AccountLocked = _user.AccountLocked,
+            PhoneNumber = _user.PhoneNumber,
+            PhoneNumberConfirmed = _user.PhoneNumberConfirmed
+        };
+
+        _editContext = new EditContext(_model);
+        _editContext.OnFieldChanged += (_, _) => _saveButtonDisabled = false;
+
+        _roles = await UserManager.GetRolesAsync(_user);
+    }
+
+    async Task Submit()
+    {
+        _saving = true;
+
+        // User is never null at this point. We checked it in OnInitializedAsync.
+        _user.UserName = _model.Username;
+        _user.GivenName = _model.GivenName;
+        _user.FamilyName = _model.FamilyName;
+        _user.Email = _model.Email;
+        _user.PhoneNumber = _model.PhoneNumber;
+        _user.TwoFactorEnabled = _model.TwoFactorEnabled;
+
+        if (_model.AccountLocked && !_user.AccountLocked) // Unlocked --> Locked
+        {
+            _user.LockUser();
+        }
+        else if (!_model.AccountLocked && _user.AccountLocked) // Locked --> Unlocked
+        {
+            _user.UnlockUser();
+        }
+
+        var result = await UserManager.UpdateAsync(_user);
+
+        if (!result.Succeeded)
+        {
+            var errorMarkup = "<ul>";
+            foreach (var error in result.Errors)
+                errorMarkup += "<li>" + error.Description + "</li>";
+
+            errorMarkup += "</ul>";
+            await DialogService.ShowErrorAsync(errorMarkup, title: "Save Failed");
+        }
+
+        _saving = false;
+        _saveButtonDisabled = true;
+    }
+
+    async Task AssignRole()
+    {
+        var dialog = await DialogService.ShowDialogAsync<AssignRoleDialog>(_roles, new DialogParameters<IEnumerable<IamRole>>
+        {
+            Title = "Assign Role",
+            Modal = true
+        });
+
+        var result = await dialog.Result;
+        if (result is { Cancelled: false, Data: IEnumerable<IamRole> selectedRoles })
+        {
+            var addRolesResult = await UserManager.AddToRolesAsync(_user, selectedRoles.Select(r => r.Name!));
+            if (!addRolesResult.Succeeded)
+            {
+                // TODO: handle the case where the update failed.
+            }
+
+            _roles = await UserManager.GetRolesAsync(_user);
+        }
+    }
+
+    async Task RemoveRoleAsync(string roleName)
+    {
+        var dialog = await DialogService.ShowConfirmationAsync("Are you sure you want to remove the user from this role?", "Unassign Role");
+        var result = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            await UserManager.RemoveFromRoleAsync(_user, roleName);
+            _roles = await UserManager.GetRolesAsync(_user);
+        }
+    }
+
+    async Task ChangePasswordAsync()
+    {
+        var dialog = await DialogService.ShowDialogAsync<ResetPasswordDialog>(new DialogParameters { Title = "Change Password" });
+        var dialogResult = await dialog.Result;
+        if (dialogResult.Cancelled)
+            return;
+
+        var newPassword = dialogResult.Data as string ?? string.Empty;
+
+        var resetToken = await UserManager.GeneratePasswordResetTokenAsync(_user);
+        var result = await UserManager.ResetPasswordAsync(_user, resetToken, newPassword);
+        if (!result.Succeeded)
+        {
+            var errorMarkup = "<ul>";
+            foreach (var error in result.Errors)
+                errorMarkup += "<li>" + error.Description + "</li>";
+
+            errorMarkup += "</ul>";
+            await DialogService.ShowErrorAsync(errorMarkup);
+        }
+        else
+        {
+            await DialogService.ShowInfoAsync("Password reset.");
+        }
+    }
+
+    async Task ResetPasswordAsync()
+    {
+        var resetToken = await UserManager.GenerateEncodedPasswordResetTokenAsync(_user);
+        var resetLink = NavigationManager.GeneratePasswordResetLink(resetToken);
+
+        await EmailSender.SendPasswordResetLinkAsync(_user, _model.Email!, HtmlEncoder.Default.Encode(resetLink));
+
+        await DialogService.ShowInfoAsync("Password reset email sent to user.");
+    }
+
+    void Discard()
+    {
+        _saveButtonDisabled = true;
+        
+        _model.Username = _user.UserName ?? string.Empty; //should never be null; but need to make the compiler happy.
+        _model.Email = _user.Email;
+        _model.EmailConfirmed = _user.EmailConfirmed;
+        _model.GivenName = _user.GivenName;
+        _model.FamilyName = _user.FamilyName;
+        _model.TwoFactorEnabled = _user.TwoFactorEnabled;
+        _model.AccountLocked = _user.AccountLocked;
+        _model.PhoneNumber = _user.PhoneNumber;
+        _model.PhoneNumberConfirmed = _user.PhoneNumberConfirmed;
+    }
+}

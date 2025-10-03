@@ -1,0 +1,13 @@
+@inherits LayoutComponentBase
+
+<div style="width: 100vw; height: 100vh; background: no-repeat url('turtles.jpg'); background-size: cover">
+    <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center" VerticalAlignment="VerticalAlignment.Center" Style="height: 100vh; width: 100vw" >
+        <FluentGrid Justify="JustifyContent.Center">
+            <FluentGridItem>
+                <FluentCard Width="100%">
+                    @Body
+                </FluentCard>
+            </FluentGridItem>
+        </FluentGrid>
+    </FluentStack>
+</div>

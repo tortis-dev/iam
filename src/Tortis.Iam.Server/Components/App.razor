@@ -1,0 +1,38 @@
+﻿<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <base href="/"/>
+    <link rel="stylesheet" href="bootstrap/bootstrap.min.css" type="text/css"/>
+    <link rel="stylesheet" href="bootstrap-icons.min.css" type="text/css"/>
+    <link rel="stylesheet" href="_content/Microsoft.FluentUI.AspNetCore.Components/css/reboot.css" type="text/css" />
+    <link rel="stylesheet" href="app.css" type="text/css"/>
+    <link rel="stylesheet" href="Tortis.Iam.Server.styles.css" type="text/css"/>
+    <link rel="icon" type="image/png" href="favicon.png"/>
+    <HeadOutlet @rendermode="@RenderModeForPage"/>
+</head>
+
+<body>
+<FluentDesignTheme Mode="DesignThemeModes.Light" OfficeColor="OfficeColor.Access" @rendermode="InteractiveServer" />
+<Routes @rendermode="@RenderModeForPage"/>
+<script src="bootstrap/bootstrap.bundle.min.js" type="text/javascript"></script>
+<script src="_framework/blazor.web.js" type="text/javascript"></script>
+<script src="_content/Microsoft.FluentUI.AspNetCore.Components/Microsoft.FluentUI.AspNetCore.Components.lib.module.js" type="module" async></script>
+</body>
+
+</html>
+
+@code {
+    [CascadingParameter]
+    HttpContext HttpContext { get; set; } = default!;
+
+    // The account pages will go into an infinite reload loop with InteractiveServer RenderMode at the app level
+    // App level is required for Radzen controls to work in the layout.
+    IComponentRenderMode? RenderModeForPage => 
+        HttpContext.Request.Path.StartsWithSegments("/Account", StringComparison.OrdinalIgnoreCase)
+        ? null
+        : 
+        InteractiveServer;
+}

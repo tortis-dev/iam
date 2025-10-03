@@ -1,0 +1,55 @@
+@page "/applications"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@using OpenIddict.Abstractions
+@using OpenIddict.EntityFrameworkCore
+@using OpenIddict.EntityFrameworkCore.Models
+@using Tortis.Iam.Server.Data
+
+@inject IOpenIddictApplicationManager ApplicationManager;
+
+@inject NavigationManager Navigation;
+
+@attribute [Authorize]
+
+<PageTitle>IAM: Applications</PageTitle>
+<h3>Applications</h3>
+<p>
+    Applications use OpenId Connect to authenticate users and/or call APIs also registered with Tortis Iam.
+</p>
+<FluentButton Appearance="Appearance.Accent" OnClick="@(() => Navigation.NavigateTo("/add-application"))">New Application</FluentButton>
+<FluentDataGrid Items="_applications" Pagination="@_pagination">
+    <PropertyColumn Property="p => p.DisplayName" Title="Name" Sortable="true" IsDefaultSortColumn="true" />
+    <PropertyColumn Property="p => p.ClientId" Title="Client Id" Sortable="true" />
+    <PropertyColumn Property="p => p.ApplicationType" Title="Application Type" Sortable="true" />
+    <TemplateColumn Title="Actions" Width="120px">
+        <FluentButton OnClick="@(() => Navigation.NavigateTo($"applications/{context.Id}"))">
+            <FluentIcon Value="@(new Icons.Regular.Size16.Edit())" Color="Color.Neutral"></FluentIcon>
+        </FluentButton>
+        <FluentButton>
+            <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error"></FluentIcon>
+        </FluentButton>
+    </TemplateColumn>
+</FluentDataGrid>
+<FluentPaginator State="@_pagination" />
+
+@code {
+    readonly PaginationState _pagination = new() { ItemsPerPage = 10 } ;
+    IQueryable<OpenIddictEntityFrameworkCoreApplication<Guid>> _applications;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        var entities = ApplicationManager.ListAsync(null, null, CancellationToken.None);
+
+        List<OpenIddictEntityFrameworkCoreApplication<Guid>> apps = new();
+        await foreach (var entity in entities)
+        {
+            var app = (OpenIddictEntityFrameworkCoreApplication<Guid>)entity;
+            if (!string.IsNullOrWhiteSpace(app.ApplicationType))
+                apps.Add(app);
+        }
+
+        _applications = apps.AsQueryable();
+    }
+}

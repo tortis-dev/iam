@@ -399,3 +399,11 @@ FodyWeavers.xsd
 .idea
 riderModule.iml
 /_ReSharper.Caches/
+
+*.db
+*.db-*
+
+# Draw.io
+*.bkp
+*.dtmp
+

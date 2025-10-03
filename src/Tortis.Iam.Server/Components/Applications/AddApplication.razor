@@ -1,0 +1,24 @@
+@page "/add-application"
+
+@using OpenIddict.Abstractions
+
+@inject IOpenIddictApplicationManager ApplicationManager;
+@inject NavigationManager NavigationManager
+
+<h3>Add Application</h3>
+
+<ApplicationDetail Model="_applicationViewModel" OnSubmit="OnSubmit" />
+
+@code {
+    ApplicationViewModel _applicationViewModel = new();
+
+    async Task OnSubmit()
+    {
+        var app = _applicationViewModel.ToApplicationDescriptor();
+        app.ClientId = Guid.NewGuid().ToString();
+        app.ClientSecret = string.Equals(_applicationViewModel.ClientType, OpenIddictConstants.ClientTypes.Confidential) ? Guid.NewGuid().ToString() : null;
+        
+        await ApplicationManager.CreateAsync(app);
+        NavigationManager.NavigateTo("/applications");
+    }
+}

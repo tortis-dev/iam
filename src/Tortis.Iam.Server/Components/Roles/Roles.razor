@@ -1,0 +1,60 @@
+@page "/roles"
+@rendermode InteractiveServer
+
+@inject NavigationManager Navigation;
+@inject IamRoleManager RoleManager;
+@inject IDialogService DialogService;
+
+<PageTitle>Roles</PageTitle>
+<h3>Roles</h3>
+<FluentButton Appearance="Appearance.Accent" OnClick="@(() => Navigation.NavigateTo("/add-role"))">New Role</FluentButton>
+<FluentDataGrid @ref="_rolesGrid" Items="_roles" Pagination="@_pagination">
+    <PropertyColumn Property="p => p.Name" Title="Role Name" Sortable="true" IsDefaultSortColumn="true" />
+    <PropertyColumn Property="p => p.Description" Title="Description" />
+    <TemplateColumn Title="Actions" Width="100px">
+        <FluentButton OnClick="@(() => Navigation.NavigateTo($"roles/{context.Id}"))">
+            <FluentIcon Value="@(new Icons.Regular.Size16.Edit())" Color="Color.Neutral"></FluentIcon>
+        </FluentButton>
+        <FluentButton OnClick="async () => await DeleteRoleAsync(context)">
+            <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error"></FluentIcon>
+        </FluentButton>
+    </TemplateColumn>
+</FluentDataGrid>
+<FluentPaginator State="@_pagination" />
+
+@code {
+    readonly PaginationState _pagination = new() { ItemsPerPage = 10 } ;
+    IQueryable<IamRole> _roles = default!;
+    FluentDataGrid<IamRole> _rolesGrid = default!;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        _roles = RoleManager.Roles;
+    }
+    
+    async Task DeleteRoleAsync(IamRole role)
+    {
+        var dialog = await DialogService.ShowConfirmationAsync($"Are you sure you want to delete role {role.Name}?");
+        var confirmationResult = await dialog.Result;
+        if (confirmationResult.Cancelled)
+            return;
+
+        var deleteResult = await RoleManager.DeleteAsync(role);
+        if (deleteResult.Succeeded)
+        {
+            await DialogService.ShowInfoAsync($"{role.Name} has been deleted.");
+            await _rolesGrid.RefreshDataAsync();
+        }
+        else
+        {
+            var errorMarkup = "<ul>";
+            foreach (var error in deleteResult.Errors)
+                errorMarkup += "<li>" + error.Description + "</li>";
+
+            errorMarkup += "</ul>";
+            await DialogService.ShowErrorAsync(errorMarkup, title: "Delete Failed");
+        }
+        
+    }
+}

@@ -1,0 +1,37 @@
+﻿@inherits LayoutComponentBase
+@rendermode InteractiveServer
+@inject IHostEnvironment HostEnvironment
+
+<FluentToastProvider MaxToastCount="50" Timeout="5000" Position="ToastPosition.TopCenter" @rendermode="InteractiveServer"/>
+<FluentDialogProvider @rendermode="InteractiveServer"/>
+<FluentTooltipProvider @rendermode="InteractiveServer"/>
+<FluentMessageBarProvider Section="Main" @rendermode="InteractiveServer"/>
+<FluentMenuProvider/>
+
+<div class="main-layout-root">
+    <FluentLayout>
+        <FluentHeader>
+            Tortis IAM
+            <FluentSpacer />
+            <TortisProfileMenu />
+        </FluentHeader>
+        <FluentStack Orientation="Orientation.Vertical" Style="height: 100%">
+            <FluentStack Orientation="Orientation.Horizontal" Style="width: 100%; flex: 1 1 auto;">
+                <FluentNavMenu Width="250" Collapsible="true">
+                    <FluentNavLink Icon="@(new Icons.Regular.Size24.Home())" Href="/" Tooltip="Home" Match="NavLinkMatch.All">Home</FluentNavLink>
+                    <FluentNavLink Icon="@(new Icons.Regular.Size24.Person())" Href="users" Tooltip="Users">Users</FluentNavLink>
+                    <FluentNavLink Icon="@(new Icons.Regular.Size24.People())" Href="roles" Tooltip="Roles">Roles</FluentNavLink>
+                    <FluentNavLink Icon="@(new Icons.Regular.Size24.Apps())" Href="applications" Tooltip="Applications">Applications</FluentNavLink>
+                    <FluentNavLink Icon="@(new Icons.Regular.Size24.Box())" Href="resources" Tooltip="Resources &amp; Scopes">Resources &amp; Scopes</FluentNavLink>
+                </FluentNavMenu>
+                <FluentBodyContent>
+                    @Body
+                </FluentBodyContent>
+            </FluentStack>
+            <FluentFooter Class="footer">
+                    <FluentToolbar Style="width: 100%;height: 36px">Environment: @HostEnvironment?.EnvironmentName</FluentToolbar>
+            </FluentFooter>
+        </FluentStack>
+    </FluentLayout>    
+</div>
+

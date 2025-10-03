@@ -1,0 +1,73 @@
+@page "/add-user"
+
+@using System.ComponentModel.DataAnnotations
+@using System.Security.Claims
+@using System.Text.Encodings.Web
+@using Microsoft.AspNetCore.Identity
+
+@inject UserManager<IamUser> UserManager
+@inject IEmailSender<IamUser> EmailSender
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<h3>Add User</h3>
+
+<FluentEditForm Model="_model" OnValidSubmit="Submit">
+    <FluentGrid>
+        <FluentGridItem xs="12" sm="12" md="6" lg="4" xl="4">
+            <FluentStack Orientation="Orientation.Vertical">
+                <DataAnnotationsValidator/>
+                <FluentTextField @bind-Value="_model.Email" Label="Email Address" Style="width: 100%"/>
+                <FluentValidationMessage For="() => _model.Email"/>
+                <FluentTextField @bind-Value="_model.PhoneNumber" Label="Phone Number" Style="width: 100%"/>
+                <FluentTextField @bind-Value="_model.GivenName" Label="Given Name" Style="width: 100%"/>
+                <FluentTextField @bind-Value="_model.FamilyName" Label="Family Name" Style="width: 100%"/>
+                <FluentButton Loading="@_saving" Type="ButtonType.Submit" Appearance="Appearance.Accent">Save</FluentButton>
+            </FluentStack>
+        </FluentGridItem>
+    </FluentGrid>
+</FluentEditForm>
+
+@code {
+
+    private sealed class InputModel
+    {
+        [Required, EmailAddress]
+        public string? Email { get; set; }
+        public string? PhoneNumber { get; set; }
+        public string? GivenName { get; set; }
+        public string? FamilyName { get; set; }
+    };
+    
+    InputModel _model = new();
+    bool _saving;
+
+    async Task Submit()
+    {
+        _saving = true;
+        var user = new IamUser
+        {
+            Id = Ulid.NewUlid().ToGuid(),
+            UserName = _model.Email,
+            Email = _model.Email,
+            PhoneNumber = _model.PhoneNumber,
+            GivenName = _model.GivenName,
+            FamilyName = _model.FamilyName,
+            CreatedOn = DateTimeOffset.Now,
+            CreatedBy = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User.FindFirstValue(ClaimTypes.NameIdentifier)!
+        };
+        
+        var result = await UserManager.CreateAsync(user, PasswordGenerator.Generate(32));
+        
+        if (!result.Succeeded)
+            return;
+        
+        var resetToken = await UserManager.GenerateEncodedPasswordResetTokenAsync(user);
+        var resetLink = NavigationManager.GeneratePasswordResetLink(resetToken);
+        
+        await EmailSender.SendPasswordResetLinkAsync(user, _model.Email!, HtmlEncoder.Default.Encode(resetLink));
+
+        _saving = false;
+        NavigationManager.NavigateTo($@"/users/{user.Id}");
+    }
+}

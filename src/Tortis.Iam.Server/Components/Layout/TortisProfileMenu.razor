@@ -1,0 +1,53 @@
+@using System.Security.Claims
+@using OpenIddict.Abstractions
+@inject IJSRuntime JS;
+@inject NavigationManager Navigation;
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@rendermode InteractiveServer
+
+<form id="iam.logout.form" name="iam.logout.form" action="account/logout" method="post" style="display:none">
+    <AntiforgeryToken/>
+    <input type="hidden" name="ReturnUrl" value="account/login"/>
+</form>
+
+<script>
+    function signout(){
+        document.getElementById("iam.logout.form").submit();
+    }
+</script>
+
+<FluentProfileMenu
+    FullName="@_fullName"
+    Initials="@_initials"
+    EMail="@_email"
+    OnHeaderButtonClick="@(() => { JS.InvokeVoidAsync("signout"); })"
+    OnFooterLinkClick="@(() => Navigation.NavigateTo("account/manage"))"/>
+    
+@code{
+
+    ClaimsPrincipal? _user;
+    string _fullName = string.Empty;
+    string _initials = string.Empty;
+    string _email = string.Empty;
+    protected override async Task OnInitializedAsync()
+    {
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _user = authenticationState.User;
+
+        var fullName = $"{_user?.GetClaim(ClaimTypes.GivenName)} {_user?.GetClaim(ClaimTypes.Surname)}";
+        if (!string.IsNullOrWhiteSpace(fullName))
+        {
+            _fullName = fullName;
+            _email = _user?.GetClaim(ClaimTypes.Email) ?? string.Empty;
+        }
+        else
+        {
+            _fullName = _user?.Identity?.Name ?? string.Empty;
+        }
+
+        var initials = $"{_user?.GetClaim(ClaimTypes.GivenName)?.Substring(0, 1)}{_user?.GetClaim(ClaimTypes.Surname)?.Substring(0, 1)}";
+        _initials = (string.IsNullOrWhiteSpace(initials) ? _user?.Identity?.Name?.Substring(0, 1) : initials) ?? string.Empty;
+    }
+
+}

@@ -1,0 +1,50 @@
+@page "/applications/{id:guid}"
+
+@using System.Security.Cryptography
+@using OpenIddict.Abstractions
+
+@inject IOpenIddictApplicationManager ApplicationManager;
+@inject NavigationManager NavigationManager;
+
+<PageTitle>IAM: @_model.Name</PageTitle>
+<h3>Edit Application</h3>
+
+<FluentStack Orientation="Orientation.Vertical" >
+  <FluentInputLabel>Client Id</FluentInputLabel>
+  <FluentLabel>@_model.ClientId</FluentLabel>
+  <ApplicationDetail Model="@_model" OnSubmit="OnSubmit" />
+</FluentStack>
+@code {
+    
+    [Parameter]
+    public required Guid Id { get; init; }
+
+    ApplicationViewModel _model = new();
+
+    OpenIddictApplicationDescriptor _application = new();
+    
+    protected override async Task OnInitializedAsync()
+    {
+        var app = await ApplicationManager.FindByIdAsync(Id.ToString());
+
+        if (app is null)
+            NavigationManager.NavigateTo("/not-found/404");
+
+        await ApplicationManager.PopulateAsync(_application, app!);
+        // Will never hit this if it is null, so using null forgiving operator to make the compiler happy.
+        _model = _application.ToViewModel();
+    }
+
+    async Task OnSubmit()
+    {
+        var descriptor = _model.ToApplicationDescriptor();
+        if (_model.AllowClientCredentials && string.IsNullOrWhiteSpace(_model.ClientSecret))
+        {
+          var hmac = new HMACSHA256();
+          descriptor.ClientSecret = Convert.ToBase64String(hmac.Key);
+        }
+        
+        var app = await ApplicationManager.FindByIdAsync(Id.ToString());
+        await ApplicationManager.UpdateAsync(app, descriptor);
+    }
+}
