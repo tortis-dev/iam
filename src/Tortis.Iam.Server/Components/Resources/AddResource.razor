@@ -20,7 +20,7 @@
 
     class InputModel
     {
-        [Required(AllowEmptyStrings = false)]
+        [Required(AllowEmptyStrings = false), Uri]
         public string? Urn { get; set; }
 
         public string? Description { get; set; }

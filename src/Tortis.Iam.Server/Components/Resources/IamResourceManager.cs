@@ -24,7 +24,7 @@ public class IamResourceManager
     
     public async Task<IamResource?> FindByAudienceAsync(string audience, CancellationToken cancellationToken = default)
     {
-        return await _dbContext.ApiResources.FirstOrDefaultAsync(a => a.Urn == audience, cancellationToken);
+        return await _dbContext.ApiResources.FirstOrDefaultAsync(a => a.Uri == audience, cancellationToken);
     }
     
     public async Task CreateAsync(IamResource resource, CancellationToken cancellationToken = default)

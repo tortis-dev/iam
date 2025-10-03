@@ -1,8 +1,6 @@
 // Licensed under GPL-3 (https://www.gnu.org/licenses/gpl-3.0.en.html)
 
 using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.CodeAnalysis;
-using System.Security.Claims;
 
 namespace Tortis.Iam.Server.Components.Resources;
 
@@ -14,14 +12,19 @@ namespace Tortis.Iam.Server.Components.Resources;
 /// </summary>
 public class IamResource
 {
-    public IamResource(string urn)
+    public IamResource(string uri)
     {
-        Urn = urn;
+        Uri = uri;
     }
     
     public Guid Id { get; set; }
-    [Url]
-    public string Urn { get; set; }
+    
+    /// <summary>
+    /// MUST be an absolute URI without a fragment.
+    /// https://www.rfc-editor.org/rfc/rfc3986#section-4.3
+    /// </summary>
+    [Uri]
+    public string Uri { get; set; }
     public string? Description { get; set; }
     public DateTimeOffset CreatedOn { get; set; } = DateTimeOffset.Now;
     public DateTimeOffset? ModifiedOn { get; set; }

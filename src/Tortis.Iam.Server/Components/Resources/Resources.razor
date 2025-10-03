@@ -12,7 +12,7 @@
 </p>
 <FluentButton Appearance="Appearance.Accent" OnClick="@(() => Navigation.NavigateTo("/add-resource"))">New API Resource</FluentButton>
 <FluentDataGrid @ref="@_resourcesGrid" Items="ResourceManager.ApiResources" Pagination="@_pagination" RowSize="DataGridRowSize.Large">
-    <PropertyColumn Property="p => p.Urn" Title="Urn" Sortable="true" IsDefaultSortColumn="true" />
+    <PropertyColumn Property="p => p.Uri" Title="Urn" Sortable="true" IsDefaultSortColumn="true" />
     <PropertyColumn Property="p => p.Description" Title="Description" Sortable="true" />
     <TemplateColumn Title="Actions" Width="120px">
         <FluentButton OnClick="@(() => Navigation.NavigateTo($"/resources/{context.Id}"))">
@@ -31,7 +31,7 @@
     
     async Task DeleteAsync(IamResource resource)
     {
-        var dialog = await DialogService.ShowConfirmationAsync($"Are you sure you want to delete resource {resource.Urn}?");
+        var dialog = await DialogService.ShowConfirmationAsync($"Are you sure you want to delete resource {resource.Uri}?");
         var confirmationResult = await dialog.Result;
         if (confirmationResult.Cancelled)
             return;

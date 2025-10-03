@@ -136,3 +136,9 @@ AspNet Core Identity is licensed under MIT (https://github.com/dotnet/aspnetcore
 
 There is some janky null handling and forgiving in the code because AspNet Core Identity has required fields--i.e.
 Username, Role Name--marked as nullable in both code and the database. All the more reason to abstract away Identity.
+
+## Other design considerations
+
+Identity use the Result Pattern. OpenIddict does not; it either works or throws an exception. This creates inconsistency
+in the code. Since we wan to return user friendly errors to the UI and eventually in the API, we'll need to use the
+Result Pattern throughout.

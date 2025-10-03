@@ -51,7 +51,7 @@
     
     class InputModel
     {
-        [Required(AllowEmptyStrings = false)]
+        [Required(AllowEmptyStrings = false), Uri]
         public string? Urn { get; set; }
 
         public string? Description { get; set; }
@@ -82,7 +82,7 @@
 
         _model = new InputModel
         {
-            Urn = _existingResource.Urn,
+            Urn = _existingResource.Uri,
             Description = _existingResource.Description
         };
         
@@ -97,7 +97,7 @@
         _saveButtonDisabled = true;
         _saving = true;
 
-        _existingResource.Urn = _model.Urn!;
+        _existingResource.Uri = _model.Urn!;
         _existingResource.Description = _model.Description;
 
         try
@@ -118,7 +118,7 @@
 
     void Discard()
     {
-        _model.Urn = _existingResource.Urn;
+        _model.Urn = _existingResource.Uri;
         _model.Description = _existingResource.Description;
     }
 

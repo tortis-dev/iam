@@ -76,14 +76,14 @@ public class IamDbContext : IdentityDbContext<IamUser, IamRole, Guid>
             api.ToTable("iam_oidc_api_resources");
             api.HasKey(p => p.Id);
             api.Property(p => p.Id);
-            api.Property(p => p.Urn).HasMaxLength(255);
+            api.Property(p => p.Uri).HasMaxLength(255);
             api.Property(p => p.Description).HasMaxLength(1024);
             api.Property(p => p.CreatedBy).HasMaxLength(36);
             api.Property(p => p.CreatedOn);
             api.Property(p => p.ModifiedBy).HasMaxLength(36);
             api.Property(p => p.ModifiedOn);
             api.Property(p => p.ConcurrencyToken).HasMaxLength(36).IsConcurrencyToken();
-            api.HasIndex(p => p.Urn).HasDatabaseName("ix_iam_oidc_api_resources_audience");
+            api.HasIndex(p => p.Uri).HasDatabaseName("ix_iam_oidc_api_resources_audience");
         });
     }
 }

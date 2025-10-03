@@ -12,13 +12,6 @@ namespace Tortis.Iam.Server.Components.OpenIdConnect;
 
 public class TokenEndpointController : ControllerBase
 {
-    readonly IamUserManager _iamUserManager;
-
-    public TokenEndpointController(IamUserManager iamUserManager)
-    {
-        _iamUserManager = iamUserManager;
-    }
-
     /// <summary>
     /// To obtain an Access Token, an ID Token, and optionally a Refresh Token, the RP (Client) sends a Token Request to
     /// the Token Endpoint to obtain a Token Response, as described in Section 3.2 of OAuth 2.0 [RFC6749], when using
