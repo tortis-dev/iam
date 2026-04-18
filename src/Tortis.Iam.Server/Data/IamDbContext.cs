@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using OpenIddict.EntityFrameworkCore.Models;
 
+using Tortis.Iam.Server.Components.OpenIdConnect;
 using Tortis.Iam.Server.Components.Resources;
 using Tortis.Iam.Server.Components.Roles;
 using Tortis.Iam.Server.Components.Users;
@@ -19,6 +20,7 @@ public class IamDbContext : IdentityDbContext<IamUser, IamRole, Guid>
     { }
 
     public DbSet<IamResource> ApiResources { get; set; } = null!;
+    public DbSet<TrustedIssuer> TrustedIssuers { get; set; } = null!;
     
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -84,6 +86,20 @@ public class IamDbContext : IdentityDbContext<IamUser, IamRole, Guid>
             api.Property(p => p.ModifiedOn);
             api.Property(p => p.ConcurrencyToken).HasMaxLength(36).IsConcurrencyToken();
             api.HasIndex(p => p.Uri).HasDatabaseName("ix_iam_oidc_api_resources_audience");
+        });
+
+        builder.Entity<TrustedIssuer>(issuer =>
+        {
+            issuer.ToTable("iam_oidc_trusted_issuers");
+            issuer.HasKey(p => p.Id);
+            issuer.Property(p => p.Issuer).HasMaxLength(255);
+            issuer.Property(p => p.Description).HasMaxLength(1024);
+            issuer.Property(p => p.CreatedBy).HasMaxLength(36);
+            issuer.Property(p => p.CreatedOn);
+            issuer.Property(p => p.ModifiedBy).HasMaxLength(36);
+            issuer.Property(p => p.ModifiedOn);
+            issuer.Property(p => p.ConcurrencyToken).HasMaxLength(36).IsConcurrencyToken();
+            issuer.HasIndex(p => p.Issuer).HasDatabaseName("ix_iam_oidc_trusted_issuers_issuer");
         });
     }
 }

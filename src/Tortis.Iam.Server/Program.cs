@@ -22,6 +22,7 @@ using Serilog;
 using Serilog.Enrichers.Span;
 using Serilog.Events;
 
+using OpenIddict.Server.Handlers;
 using Tortis.Iam.Server;
 using Tortis.Iam.Server.Components;
 using Tortis.Iam.Server.Components.Account;
@@ -118,7 +119,10 @@ try
                 .AddAspNetCoreInstrumentation()
                 .AddEntityFrameworkCoreInstrumentation(options =>
                 {
-                    options.SetDbStatementForText = true;
+                    options.EnrichWithIDbCommand = (activity, command) =>
+                    {
+                        activity.AddTag("db.command", command.CommandText);
+                    };
                 }));
 
     // Configure MVC
@@ -178,7 +182,7 @@ try
         // Use OpenIdDict entities with Guid ID type
         options.UseOpenIddict<Guid>();
     });
-
+    
     // OpenIdDict uses Quartz to schedule background jobs for cleaning up token caches.
     builder.Services.AddQuartz(options =>
     {
@@ -227,6 +231,8 @@ try
             if (settings.EnableHybridFlow) options.AllowHybridFlow();
             if (settings.EnableRefreshTokenFlow) options.AllowRefreshTokenFlow();
 
+            options.AddJwtBearerGrant();
+            
             if (!settings.EnableAccessTokenEncryption)
                 options.DisableAccessTokenEncryption();
 
@@ -254,8 +260,6 @@ try
             options.RegisterScopes(OpenIddictConstants.Scopes.Email); // to support federation
             options.RegisterScopes(OpenIddictConstants.Scopes.Roles); // to support RBAC
         });
-
-    // Identity
     builder.Services
         .AddScoped<IdentityUserAccessor>()
         .AddScoped<IdentityRedirectManager>()
@@ -274,6 +278,7 @@ try
 
     // Application services
     builder.Services
+        .AddSingleton<IOpenIddictJwtBearerIssuerProvider, DatabaseOpenIddictJwtBearerIssuerProvider>()
         .AddHostedService<SetupDefaultAdmin>()
         .Replace(ServiceDescriptor.Scoped<IUserClaimsPrincipalFactory<IamUser>, IamUserClaimsPrincipalFactory>())
         .AddScoped<IamUserManager>()

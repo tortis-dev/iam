@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OpenIddict.Abstractions;
+using OpenIddict.Server;
 using OpenIddict.Server.AspNetCore;
 
 using Tortis.Iam.Server.Components.Users;
@@ -12,6 +13,7 @@ namespace Tortis.Iam.Server.Components.OpenIdConnect;
 
 public class TokenEndpointController : ControllerBase
 {
+    private const string JwtBearerGrantType = "urn:ietf:params:oauth:grant-type:jwt-bearer";
     /// <summary>
     /// To obtain an Access Token, an ID Token, and optionally a Refresh Token, the RP (Client) sends a Token Request to
     /// the Token Endpoint to obtain a Token Response, as described in Section 3.2 of OAuth 2.0 [RFC6749], when using
@@ -68,6 +70,16 @@ public class TokenEndpointController : ControllerBase
             // var roles = await _iamUserManager.GetRolesAsync(user);
             // foreach (var role in roles)
             //     claimsPrincipal.AddClaim(OpenIddictConstants.Claims.Role, role);
+        }
+        else if (string.Equals(request.GrantType, JwtBearerGrantType, StringComparison.Ordinal))
+        {
+            // JWT Bearer grant validation and principal attachment is handled by 
+            // ValidateJwtBearerGrant and AttachJwtBearerPrincipal handlers.
+            claimsPrincipal = (await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme)).Principal;
+            if (claimsPrincipal is null)
+            {
+                throw new InvalidOperationException("JWT Bearer grant validation did not produce a principal.");
+            }
         }
         else
         {

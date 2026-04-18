@@ -1,54 +1,55 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
+
     <UserSecretsId>aspnet-Tortis.Iam.Server-FE1ACAB7-3021-42FA-A1E8-2E63E219B8E2</UserSecretsId>
 <!--    <PublishSingleFile>true</PublishSingleFile>-->
 <!--    <SelfContained>false</SelfContained>-->
   </PropertyGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="OpenIdConnectTests"/>
+    <InternalsVisibleTo Include="OpenIdConnectTests" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="EFCore.NamingConventions" Version="9.0.0"/>
-    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="9.0.9"/>
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.9"/>
-    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="9.0.9"/>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.9"/>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.9"/>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.9"/>
-    <PackageReference Include="OpenIddict" Version="7.1.0"/>
-    <PackageReference Include="OpenIddict.AspNetCore" Version="7.1.0"/>
-    <PackageReference Include="OpenIddict.EntityFrameworkCore" Version="7.1.0"/>
-    <PackageReference Include="OpenIddict.Quartz" Version="7.1.0"/>
-    <PackageReference Include="Quartz.Extensions.Hosting" Version="3.15.0"/>
-    <PackageReference Include="Quartz.Serialization.SystemTextJson" Version="3.15.0"/>
-    <!-- System.Data.SQLite is required for Quartz. EF will use Microsoft.Data.Sqlite -->
-    <PackageReference Include="System.Data.SQLite" Version="2.0.2" />
-    <PackageReference Include="Ulid" Version="1.4.1" />
-    <PackageReference Include="Serilog" Version="4.3.0" />
-    <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
-    <PackageReference Include="Serilog.Enrichers.Span" Version="3.1.0" />
-    <PackageReference Include="Serilog.Sinks.Async" Version="2.1.0" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
-    <PackageReference Include="Serilog.Sinks.OpenTelemetry" Version="4.2.0" />
-    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.12.0" />
-    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.12.0" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.12.0" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.12.0" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" Version="1.12.0-beta.2" />
+    <PackageReference Include="EFCore.NamingConventions" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" />
+    <PackageReference Include="OpenIddict" />
+    <PackageReference Include="OpenIddict.AspNetCore" />
+    <PackageReference Include="OpenIddict.EntityFrameworkCore" />
+    <PackageReference Include="OpenIddict.Quartz" />
+    <PackageReference Include="Quartz.Extensions.Hosting" />
+    <PackageReference Include="Quartz.Serialization.SystemTextJson" />
+    <PackageReference Include="System.Data.SQLite" />
+    <PackageReference Include="Ulid" />
+    <PackageReference Include="Serilog" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Enrichers.Span" />
+    <PackageReference Include="Serilog.Sinks.Async" />
+    <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Sinks.OpenTelemetry" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" />
 
-    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" Version="4.12.1"/>
-    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components.Icons" Version="4.12.1"/>
-    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components.DataGrid.EntityFrameworkAdapter" Version="4.12.1" />
+    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" />
+    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components.Icons" />
+    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components.DataGrid.EntityFrameworkAdapter" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Data\qrtz_sqlite_schema.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tortis.Iam.OpenIddict.JwtBearer\Tortis.Iam.OpenIddict.JwtBearer.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using OpenIddict.Abstractions;
+using OpenIddict.Server.Handlers;
 
 using Tortis.Iam.Server.Components.Resources;
 using Tortis.Iam.Server.Components.Roles;
@@ -168,7 +169,7 @@ sealed class SetupDefaultAdmin : BackgroundService
         
         var client = await applicationManager.FindByClientIdAsync(clientId);
         if (client is not null)
-            return;
+            await applicationManager.DeleteAsync(client);
         
         await applicationManager.CreateAsync(new OpenIddictApplicationDescriptor
         {
@@ -185,6 +186,7 @@ sealed class SetupDefaultAdmin : BackgroundService
                 OpenIddictConstants.Permissions.GrantTypes.ClientCredentials,
                 OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode,
                 OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
+                JwtBearerPermissions.GrantTypes.JwtBearer,
                 
                 OpenIddictConstants.Permissions.Prefixes.Scope + "fullaccess",
                 OpenIddictConstants.Permissions.Scopes.Profile,
