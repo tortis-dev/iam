@@ -231,7 +231,7 @@ try
             if (settings.EnableHybridFlow) options.AllowHybridFlow();
             if (settings.EnableRefreshTokenFlow) options.AllowRefreshTokenFlow();
 
-            options.AddJwtBearerGrant();
+            options.AllowJwtBearerAuthorizationFlow();
             
             if (!settings.EnableAccessTokenEncryption)
                 options.DisableAccessTokenEncryption();

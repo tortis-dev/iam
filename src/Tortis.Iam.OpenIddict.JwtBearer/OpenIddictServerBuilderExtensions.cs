@@ -1,19 +1,33 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
-using OpenIddict.Server;
 
-namespace OpenIddict.Server.Handlers;
+using OpenIddict.Abstractions;
+using OpenIddict.Server.Handlers;
+
+// ReSharper disable once CheckNamespace
+namespace Microsoft.Extensions.DependencyInjection;
 
 public static class OpenIddictServerBuilderExtensions
 {
-    public static OpenIddictServerBuilder AddJwtBearerGrant(this OpenIddictServerBuilder builder)
+    /// <summary>
+    /// Enables the JWT bearer authorization (Impersonation) flow.
+    /// https://www.rfc-editor.org/rfc/rfc7523 Sections 2.1, 3, 3.1, 4 
+    /// </summary>
+    /// <param name="builder"></param>
+    /// <returns></returns>
+    public static OpenIddictServerBuilder AllowJwtBearerAuthorizationFlow(this OpenIddictServerBuilder builder)
     {
-        return builder.AddJwtBearerGrant(_ => { });
+        return builder.AllowJwtBearerAuthorizationFlow(_ => { });
     }
 
-    public static OpenIddictServerBuilder AddJwtBearerGrant(this OpenIddictServerBuilder builder, Action<OpenIddictJwtBearerOptions> configure)
+    /// <summary>
+    /// Enables the JWT bearer authorization (Impersonation) flow.
+    /// https://www.rfc-editor.org/rfc/rfc7523 Sections 2.1, 3, 3.1, 4 
+    /// </summary>
+    /// <param name="builder"></param>
+    /// <returns></returns>
+    public static OpenIddictServerBuilder AllowJwtBearerAuthorizationFlow(this OpenIddictServerBuilder builder, Action<OpenIddictJwtBearerOptions> configure)
     {
-        builder.AllowCustomFlow("urn:ietf:params:oauth:grant-type:jwt-bearer");
+        builder.AllowCustomFlow(JwtBearerGrantTypes.JwtBearer);
         builder.Services.Configure(configure);
         builder.AddEventHandler(ValidateJwtBearerGrant.Descriptor);
         builder.AddEventHandler(AttachJwtBearerPrincipal.Descriptor);
