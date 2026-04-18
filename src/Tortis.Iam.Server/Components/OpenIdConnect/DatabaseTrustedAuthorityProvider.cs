@@ -2,7 +2,7 @@ using OpenIddict.Server.Handlers;
 
 namespace Tortis.Iam.Server.Components.OpenIdConnect;
 
-public sealed class DatabaseOpenIddictJwtBearerIssuerProvider : IOpenIddictJwtBearerIssuerProvider
+public sealed class DatabaseTrustedAuthorityProvider : ITrustedAuthorityProvider
 {
     public Task<IEnumerable<TrustedAuthority>> GetTrustedIssuersAsync()
     {
