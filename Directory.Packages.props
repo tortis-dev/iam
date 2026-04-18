@@ -25,7 +25,9 @@
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="10.0.6" />
 
     <!-- Microsoft.IdentityModel -->
-    <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.17.0" />
+      <PackageVersion Include="Microsoft.IdentityModel.Protocols" Version="8.17.0" />
+      <PackageVersion Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="8.17.0" />
+      <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.17.0" />
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.17.0" />
 
     <!-- Microsoft.FluentUI -->

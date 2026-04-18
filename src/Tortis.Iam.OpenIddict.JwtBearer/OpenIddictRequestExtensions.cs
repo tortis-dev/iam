@@ -1,6 +1,6 @@
 using OpenIddict.Abstractions;
 
-namespace OpenIddict.Server.Handlers;
+namespace OpenIddict.Server;
 
 public static class OpenIddictRequestExtensions
 {

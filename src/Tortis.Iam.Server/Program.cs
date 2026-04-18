@@ -278,7 +278,7 @@ try
 
     // Application services
     builder.Services
-        .AddSingleton<IOpenIddictJwtBearerIssuerProvider, DatabaseOpenIddictJwtBearerIssuerProvider>()
+        .AddSingleton<ITrustedAuthorityProvider, DatabaseTrustedAuthorityProvider>()
         .AddHostedService<SetupDefaultAdmin>()
         .Replace(ServiceDescriptor.Scoped<IUserClaimsPrincipalFactory<IamUser>, IamUserClaimsPrincipalFactory>())
         .AddScoped<IamUserManager>()

@@ -1,3 +1,8 @@
+using System.Collections.Concurrent;
+
+using Microsoft.IdentityModel.JsonWebTokens;
+using Microsoft.IdentityModel.Protocols;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using OpenIddict.Abstractions;
 
@@ -5,11 +10,15 @@ namespace OpenIddict.Server.Handlers;
 
 public sealed class JwtBearerGrantValidator
 {
+    private static readonly ConcurrentDictionary<string, ConfigurationManager<OpenIdConnectConfiguration>> _configManagers = new();
+
+    private static readonly ConcurrentDictionary<string, string> _issuerAuthorities = new();
+    
     public async Task<JwtBearerValidationResult> ValidateAsync(
         string assertion,
         string clientId,
         OpenIddictJwtBearerOptions options,
-        IOpenIddictJwtBearerIssuerProvider? issuerProvider = null)
+        ITrustedAuthorityProvider issuerProvider)
     {
         if (string.IsNullOrEmpty(assertion))
         {
@@ -19,22 +28,47 @@ public sealed class JwtBearerGrantValidator
         }
 
         var validationParameters = options.TokenValidationParameters.Clone();
+
+        var subjectToken = new JsonWebToken(assertion);
+        
+        if (!_configManagers.TryGetValue(subjectToken.Issuer, out var configManager))
+        {
+            // First, we the latest set of trusted authorities.
+            IEnumerable<TrustedAuthority> trustedAuthorities = await issuerProvider.GetTrustedIssuersAsync();
+            
+            foreach (var authority in trustedAuthorities)
+            {
+                // If we've already configured a manager for this authority, skip it.'
+                if (_issuerAuthorities.ContainsKey(authority.Authority))
+                    continue;
+
+                var metadataAddress = authority.GetMetadataAddress();
+                var cm = new ConfigurationManager<OpenIdConnectConfiguration>(
+                    metadataAddress,
+                    new OpenIdConnectConfigurationRetriever(),
+                    new HttpDocumentRetriever());
+
+                var config = await cm.GetBaseConfigurationAsync(CancellationToken.None);
+                _configManagers.TryAdd(config.Issuer, cm);
+                _issuerAuthorities.TryAdd(authority.Authority, config.Issuer);
+            }
+            
+            _configManagers.TryGetValue(subjectToken.Issuer, out configManager);
+        }
+        
+        if (configManager is null)
+        {
+            return JwtBearerValidationResult.Failure(
+                OpenIddictConstants.Errors.InvalidToken,
+                $"Issuer '{subjectToken.Issuer}' is not trusted.");
+        }
+        
+        validationParameters.ConfigurationManager = configManager;
+        
         validationParameters.ClockSkew = options.ClockSkew;
+        
         if (options.ValidateClientIdAsAudience)
             validationParameters.ValidAudience = clientId;
-
-        if (issuerProvider is not null)
-        {
-            var issuers = await issuerProvider.GetTrustedIssuersAsync();
-            validationParameters.ValidIssuers = (validationParameters.ValidIssuers ?? Enumerable.Empty<string>())
-                .Union(issuers)
-                .Distinct();
-            
-            if (validationParameters.ValidIssuers.Any())
-            {
-                validationParameters.ValidateIssuer = true;
-            }
-        }
 
         try
         {

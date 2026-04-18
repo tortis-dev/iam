@@ -7,11 +7,11 @@ namespace OpenIddict.Server.Handlers;
 internal sealed class ValidateJwtBearerGrant : IOpenIddictServerHandler<OpenIddictServerEvents.ProcessAuthenticationContext>
 {
     private readonly IOptionsMonitor<OpenIddictJwtBearerOptions> _options;
-    private readonly IOpenIddictJwtBearerIssuerProvider? _issuerProvider;
+    private readonly ITrustedAuthorityProvider? _issuerProvider;
 
     public ValidateJwtBearerGrant(
         IOptionsMonitor<OpenIddictJwtBearerOptions> options,
-        IOpenIddictJwtBearerIssuerProvider? issuerProvider = null)
+        ITrustedAuthorityProvider? issuerProvider = null)
     {
         _options = options;
         _issuerProvider = issuerProvider;

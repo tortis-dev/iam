@@ -1,4 +1,4 @@
-namespace OpenIddict.Server.Handlers;
+namespace OpenIddict.Abstractions;
 
 public static class JwtBearerGrantTypes
 {
