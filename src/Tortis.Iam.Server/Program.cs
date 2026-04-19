@@ -276,6 +276,8 @@ try
         .AddSignInManager()
         .AddDefaultTokenProviders();
 
+    builder.Services.AddDbContextFactory<IamDbContext>();
+    
     // Application services
     builder.Services
         .AddSingleton<ITrustedAuthorityProvider, DatabaseTrustedAuthorityProvider>()

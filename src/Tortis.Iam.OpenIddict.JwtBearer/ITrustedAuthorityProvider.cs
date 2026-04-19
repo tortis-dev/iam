@@ -1,7 +1,7 @@
-namespace OpenIddict.Server.Handlers;
+namespace OpenIddict.Abstractions;
 
 /// <summary>
-/// Provides a way to dynamically fetch trusted issuers for JWT bearer validation.
+/// Provides a way to dynamically fetch trusted authorities for JWT bearer validation.
 /// </summary>
 public interface ITrustedAuthorityProvider
 {

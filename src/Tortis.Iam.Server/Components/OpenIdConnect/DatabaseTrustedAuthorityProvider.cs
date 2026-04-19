@@ -1,4 +1,4 @@
-using OpenIddict.Server.Handlers;
+using OpenIddict.Abstractions;
 
 namespace Tortis.Iam.Server.Components.OpenIdConnect;
 
